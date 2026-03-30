@@ -1,0 +1,71 @@
+# Directories
+.usr
+.vs/
+generated_docs/
+
+bin/
+bin-int/
+vendor/bin/*
+!vendor/bin/premake/premake5.exe
+
+# Vendor repos (cloned on demand via --deps)
+flecs_das/vendor/flecs/
+flecs_das/vendor/daslang/
+!flecs_das/vendor/*.lua
+
+# Files
+*.user
+/.cache/clangd/index
+/compile_commands.json
+
+# Binary files and build artifacts
+*.exe
+*.dll
+*.lib
+*.so
+*.a
+*.o
+*.obj
+*.pdb
+
+# Build directories
+/build/
+/bin/
+/Debug/
+/Release/
+/dist/
+**/build_archive/
+**/Archive-windows-x86_64/
+
+# IDE and editor-specific files
+.vscode/
+.idea/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.db
+
+# Temporary files and cache
+*.log
+*.tmp
+*.cache
+*.bak
+*.swp
+*.swo
+
+# Editor-specific
+*.DS_Store
+*~
+
+# Misc
+nuget.config
+imgui.ini
+logs
+temp
+tmp.txt
+TestResults
+enc_temp_folder/
+*.etl
+/artifacts
+/.claude
+*.slnx

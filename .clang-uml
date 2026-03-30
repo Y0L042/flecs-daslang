@@ -1,0 +1,20 @@
+# Change to directory where compile_commands.json is
+compilation_database_dir: .
+# Change to directory where diagram should be written
+output_directory: docs/diagrams
+
+diagrams:
+  flecs_daslang_bindings:
+    type: class
+    glob:
+      - flecs_das/src/**/*.cpp
+    using_namespace:
+      - flecs_das
+    include:
+      namespaces:
+        - flecs_das
+    exclude:
+      namespaces:
+        - std
+        - flecs
+    generate_packages: true

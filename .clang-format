@@ -1,0 +1,14 @@
+# Format Style Options - Created with Clang Power Tools
+---
+BasedOnStyle: Microsoft
+SortIncludes: Never
+IncludeBlocks: Preserve
+IncludeCategories:
+  - Regex: '^".*"$'
+    Priority: 20
+  - Regex: '^<.*>$'
+    Priority: 30
+TabWidth: 8
+AlwaysBreakTemplateDeclarations: Yes
+BreakConstructorInitializers: BeforeColon
+...
