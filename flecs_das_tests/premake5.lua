@@ -35,6 +35,16 @@ project "flecs_das_tests"
         "%{wks.location}/flecs_das/vendor/daslang/lib/Debug",
     }
 
+    filter "action:vs*"
+        buildoptions { 
+            "/utf-8", 
+            '/Zc:__cplusplus', 
+            '/Zc:preprocessor' ,
+            '/bigobj'
+        }  -- Changed: Added /utf-8 flag for Unicode support
+        multiprocessorcompile "On"
+    filter {}
+
     filter "configurations:Debug"
         symbols "On"
         optimize "Off"

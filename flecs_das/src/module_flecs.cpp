@@ -3,6 +3,8 @@
 #include <flecs.h>
 #include "scripts/flecs.das.inc"
 
+// --- Hand-written annotations (keep these; generator skips them) ---
+
 MAKE_TYPE_FACTORY(ecs_world_t, ecs_world_t);
 struct EcsWorldAnnotation : das::DummyTypeAnnotation
 {
@@ -31,6 +33,9 @@ struct EcsEntitesAnnotation : das::ManagedStructureAnnotation<ecs_entities_t, fa
     }
 };
 
+// --- Generated annotations ---
+#include "generated/module_flecs_annotations.inc"
+
 class Module_flecs : public das::Module
 {
   public:
@@ -39,6 +44,7 @@ class Module_flecs : public das::Module
         das::ModuleLibrary lib(this);
         lib.addBuiltInModule();
 
+        // Hand-written registrations
         addAnnotation(das::make_smart<EcsWorldAnnotation>());
         addAnnotation(das::make_smart<EcsTypeAnnotation>(lib));
         addAnnotation(das::make_smart<EcsEntitesAnnotation>(lib));
@@ -47,6 +53,9 @@ class Module_flecs : public das::Module
         das::addExtern<DAS_BIND_FUN(ecs_fini)>(*this, lib, "ecs_fini", das::SideEffects::modifyExternal, "ecs_fini");
         das::addExtern<DAS_BIND_FUN(ecs_get_entities), das::SimNode_ExtFuncCallAndCopyOrMove>(
             *this, lib, "ecs_get_entities", das::SideEffects::modifyExternal, "ecs_get_entities");
+
+        // Generated registrations
+#include "generated/module_flecs_register.inc"
 
         compileBuiltinModule("flecs.das", flecs_das, sizeof(flecs_das));
     }

@@ -10,16 +10,22 @@ SCRIPT_INC="$SCRIPT_DIR/flecs_das/src"
 DAS_FORMATTER="$SCRIPT_DIR/flecs_das/vendor/daslang/utils/dasCodeFormatter/main.das"
 DASROOT="$SCRIPT_DIR/flecs_das/vendor/daslang"
 
+GEN_FLECS_BIND_PY="$SCRIPT_DIR/flecs_das/tools/gen_flecs_bindings.py"
+FLECS_H="$SCRIPT_DIR/flecs_das/vendor/flecs/include/flecs.h"
+GENERATED_DIR="$SCRIPT_DIR/flecs_das/src/generated"
+FLECS_DAS="$SCRIPT_DIR/flecs_das/src/scripts/flecs.das"
+
 usage() {
     echo "Usage: $0 <command> [args]"
     echo ""
     echo "Commands:"
-    echo "  gen-inc         Regenerate all .das.inc files from their .das sources"
-    echo "  gen-adapter     Regenerate flecs_das_bind_gen.inc via cpp_bind"
-    echo "  fmt <file.das>  Format a .das file in-place (backs up, formats, verifies)"
-    echo "  fmt-all         Format all .das files under flecs_das/src"
-    echo "  codegen         Run the full pipeline: fmt-all, gen-inc, gen-adapter"
-    echo "  help            Show this help message"
+    echo "  gen-inc           Regenerate all .das.inc files from their .das sources"
+    echo "  gen-adapter       Regenerate flecs_das_bind_gen.inc via cpp_bind"
+    echo "  gen-flecs-bind    Parse flecs.h and generate C++ binding fragments + update flecs.das"
+    echo "  fmt <file.das>    Format a .das file in-place (backs up, formats, verifies)"
+    echo "  fmt-all           Format all .das files under flecs_das/src"
+    echo "  codegen           Run the full pipeline: gen-flecs-bind, gen-inc, gen-adapter"
+    echo "  help              Show this help message"
 }
 
 cmd_gen_inc() {
@@ -76,9 +82,14 @@ cmd_fmt_all() {
     echo "Formatted $count file(s)."
 }
 
+cmd_gen_flecs_bind() {
+    echo "Parsing flecs.h and generating C++ binding fragments..."
+    python3 "$GEN_FLECS_BIND_PY" "$FLECS_H" "$GENERATED_DIR" "$FLECS_DAS"
+}
+
 cmd_codegen() {
-    echo "==> fmt-all"
-    cmd_fmt_all
+    echo "==> gen-flecs-bind"
+    cmd_gen_flecs_bind
     echo "==> gen-inc"
     cmd_gen_inc
     echo "==> gen-adapter"
@@ -86,11 +97,12 @@ cmd_codegen() {
 }
 
 case "${1:-}" in
-    gen-inc)      cmd_gen_inc ;;
-    gen-adapter)  cmd_gen_adapter ;;
-    fmt)          cmd_fmt "${2:-}" ;;
-    fmt-all)      cmd_fmt_all ;;
-    codegen)      cmd_codegen ;;
-    help|"")      usage ;;
-    *)            echo "Unknown command: $1"; usage; exit 1 ;;
+    gen-inc)         cmd_gen_inc ;;
+    gen-adapter)     cmd_gen_adapter ;;
+    gen-flecs-bind)  cmd_gen_flecs_bind ;;
+    fmt)             cmd_fmt "${2:-}" ;;
+    fmt-all)         cmd_fmt_all ;;
+    codegen)         cmd_codegen ;;
+    help|"")         usage ;;
+    *)               echo "Unknown command: $1"; usage; exit 1 ;;
 esac

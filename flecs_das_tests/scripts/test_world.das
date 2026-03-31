@@ -16,9 +16,22 @@ def test_world_creation() {
     end_case()
 }
 
+def test_entity_creation() {
+    begin_case("ecs_new returns valid entity")
+    var world : ecs_world_t? = ecs_init()
+    REQUIRE(world != null, "ecs_init() should return a non-null world pointer")
+
+    var entity : ecs_entity_t = ecs_new(world)
+    CHECK(entity != uint64(0), "ecs_new() should return a non-zero entity ID")
+
+    ecs_fini(world)
+    end_case()
+}
+
 [export]
 def run_tests() {
     begin_suite("Flecs World Lifecycle")
     test_world_creation()
+    test_entity_creation()
     end_suite()
 }
