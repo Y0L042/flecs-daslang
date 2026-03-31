@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-GENERATE_XXD="$SCRIPT_DIR/flecs_das/src/generate_xxd.py"
+GENERATE_XXD="$SCRIPT_DIR/flecs_das/tools/generate_xxd.py"
 DASLANG="$SCRIPT_DIR/flecs_das/vendor/daslang/build/Debug/daslang.exe"
 GEN_ADAPTER_DAS="$SCRIPT_DIR/flecs_das/src/gen_bind.das"
 GEN_BIND_DAS="$SCRIPT_DIR/flecs_das/src/gen_bind.das"

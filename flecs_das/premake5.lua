@@ -17,7 +17,7 @@ project "flecs_das"
     targetdir ("%{wks.location}/flecs_das/bin/" .. outputdir .. "/%{prj.name}")
     objdir    ("%{wks.location}/flecs_das/bin-int/" .. outputdir .. "/%{prj.name}")
 
-    files { "src/**.h", "src/**.cpp", "src/**.c" }
+    files { "src/**.h", "src/**.cpp", "src/**.c", "src/**.hpp", "src/**.inc" }
 
     includedirs { "src" }
 
