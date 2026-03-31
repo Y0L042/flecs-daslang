@@ -1,57 +1,19 @@
 // Test query API and iteration
+// TODO: fill in cases once ecs_query_init, ecs_query_iter, ecs_query_next,
+//       ecs_field_w_size, ecs_iter_fini, ecs_query_fini, ecs_frame_begin,
+//       ecs_frame_end are bound in module_flecs.cpp.
 options gen2
 require flecs
-/*
-def test_query_creation()
-    var world = ecs_init()
-    if world == null
-        print("ERROR: Failed to create world")
-        return
-    
-    print("✓ Created test world for query tests")
-    
-    // Create some entities
-    var e1 = ecs_new(world)
-    var e2 = ecs_new(world)
-    var e3 = ecs_new(world)
-    
-    print("✓ Created 3 test entities")
-    
-    // In a full implementation, we would:
-    // 1. Create a query descriptor
-    // 2. Initialize a query with ecs_query_init()
-    // 3. Iterate through results with ecs_query_iter() and ecs_query_next()
-    // 4. Access entity data through ecs_field_w_size()
-    // 5. Finalize with ecs_iter_fini() and ecs_query_fini()
-    
-    // For now, we test that the API functions are accessible
-    print("✓ Query API functions are accessible")
-    
-    ecs_fini(world)
+require das_test
 
-def test_iterator_operations()
-    var world = ecs_init()
-    if world == null
-        print("ERROR: Failed to create world")
-        return
-    
-    // Create test entities
-    var e1 = ecs_new(world)
-    var e2 = ecs_new(world)
-    
-    // Test basic entity count by frame iteration
-    let delta = 0.016f
-    var elapsed = ecs_frame_begin(world, delta)
-    ecs_frame_end(world)
-    
-    print("✓ Frame iteration completed")
-    
-    ecs_fini(world)
-    */
 [export]
 def run_query_tests() {
-    print("\n=== Running Query and Iterator Tests ===\n")
-    
-    
-    print("=== Query Tests Completed ===\n")
+    begin_suite("Flecs Query and Iterator API")
+
+    begin_case("placeholder - query API not yet bound")
+    MESSAGE("ecs_query_init, ecs_query_iter, ecs_frame_begin etc. are not bound yet")
+    MESSAGE("Add real CHECK calls here once the flecs module exposes these functions")
+    end_case()
+
+    end_suite()
 }

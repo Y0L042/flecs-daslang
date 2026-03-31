@@ -1,29 +1,24 @@
 // Test basic world creation and lifecycle
 options gen2
 require flecs
+require das_test
 
-def test_world_creation() : bool {
-    // Create a world
-    var world = ecs_init()
-    if (world == null) {
-        print("ERROR: Failed to create world")
-        return false
-    }
-    
-    print("Created world successfully")
+def test_world_creation() {
+    begin_case("ecs_init returns non-null world")
+    var world : ecs_world_t? = ecs_init()
+    CHECK(world != null, "ecs_init() should return a non-null world pointer")
+    REQUIRE(world != null, "cannot proceed with ecs_fini on a null world")
+    end_case()
 
-    return true
+    begin_case("ecs_fini returns 0")
+    var res : int = ecs_fini(world)
+    CHECK(res == 0, "ecs_fini() should return 0 on success")
+    end_case()
 }
 
 [export]
 def run_tests() {
-    print("\n=== Running Flecs Module Tests ===\n")
-    
-    if (test_world_creation()) {
-        print("\nWorld lifecycle test PASSED\n")
-    } else {
-        print("\nWorld lifecycle test FAILED\n")
-    }
-    
-    print("=== All Tests Completed ===\n")
+    begin_suite("Flecs World Lifecycle")
+    test_world_creation()
+    end_suite()
 }
