@@ -127,8 +127,11 @@ int main(int argc, char *argv[])
         }
     }
 
+    std::cout << "Results: " << passed << " passed, " << failed << " failed.\n";
+
+    RunDasScript(libGroup, scriptsDir + "sandbox.das", "sandbox");
+
     das::Module::Shutdown();
 
-    std::cout << "Results: " << passed << " passed, " << failed << " failed.\n";
     return failed == 0 ? 0 : 1;
 }

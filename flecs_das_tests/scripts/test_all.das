@@ -1,11 +1,16 @@
+options gen2
+
 // Main test runner for flecs_das module
 require flecs
+
 require test_world
-// require test_components
-// require test_queries
+require test_components
+require test_queries
+
+require sandbox
 
 [export]
-def main()
+def main() {
     print("\n╔════════════════════════════════════════╗")
     print("║   Flecs DASLang Module Test Suite   ║")
     print("╚════════════════════════════════════════╝\n")
@@ -18,3 +23,7 @@ def main()
     print("\n╔════════════════════════════════════════╗")
     print("║        All Test Suites Completed       ║")
     print("╚════════════════════════════════════════╝\n")
+
+    print("\n\n\n")
+    sandbox()
+}
