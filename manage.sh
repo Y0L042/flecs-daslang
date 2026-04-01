@@ -15,6 +15,10 @@ FLECS_H="$SCRIPT_DIR/flecs_das/vendor/flecs/include/flecs.h"
 GENERATED_DIR="$SCRIPT_DIR/flecs_das/src/generated"
 FLECS_DAS="$SCRIPT_DIR/flecs_das/src/scripts/flecs.das"
 
+GEN_FLECS_C_BIND_PY="$SCRIPT_DIR/flecs_das/tools/gen_flecs_c_bindings.py"
+FLECS_C_H="$SCRIPT_DIR/flecs_das/vendor/flecs/include/flecs/addons/flecs_c.h"
+FLECS_C_DAS="$SCRIPT_DIR/flecs_das/src/scripts/flecs_c.das"
+
 usage() {
     echo "Usage: $0 <command> [args]"
     echo ""
@@ -24,7 +28,8 @@ usage() {
     echo "  gen-flecs-bind    Parse flecs.h and generate C++ binding fragments + update flecs.das"
     echo "  fmt <file.das>    Format a .das file in-place (backs up, formats, verifies)"
     echo "  fmt-all           Format all .das files under flecs_das/src"
-    echo "  codegen           Run the full pipeline: gen-flecs-bind, gen-inc, gen-adapter"
+    echo "  gen-flecs-c-bind  Generate flecs_c.das Layer 2 wrappers from gen_flecs_c_bindings.py"
+  echo "  codegen           Run the full pipeline: gen-flecs-bind, gen-flecs-c-bind, gen-inc, gen-adapter"
     echo "  help              Show this help message"
 }
 
@@ -87,9 +92,16 @@ cmd_gen_flecs_bind() {
     python3 "$GEN_FLECS_BIND_PY" "$FLECS_H" "$GENERATED_DIR" "$FLECS_DAS"
 }
 
+cmd_gen_flecs_c_bind() {
+    echo "Generating flecs_c.das Layer 2 wrappers..."
+    python3 "$GEN_FLECS_C_BIND_PY" "$FLECS_C_DAS"
+}
+
 cmd_codegen() {
     echo "==> gen-flecs-bind"
     cmd_gen_flecs_bind
+    echo "==> gen-flecs-c-bind"
+    cmd_gen_flecs_c_bind
     echo "==> gen-inc"
     cmd_gen_inc
     echo "==> gen-adapter"
@@ -99,7 +111,8 @@ cmd_codegen() {
 case "${1:-}" in
     gen-inc)         cmd_gen_inc ;;
     gen-adapter)     cmd_gen_adapter ;;
-    gen-flecs-bind)  cmd_gen_flecs_bind ;;
+    gen-flecs-bind)   cmd_gen_flecs_bind ;;
+    gen-flecs-c-bind) cmd_gen_flecs_c_bind ;;
     fmt)             cmd_fmt "${2:-}" ;;
     fmt-all)         cmd_fmt_all ;;
     codegen)         cmd_codegen ;;
