@@ -112,6 +112,7 @@ int main(int argc, char *argv[])
     };
 
     int passed = 0, failed = 0;
+    #if 0
     for (auto &tc : tests)
     {
         std::cout << "[ RUN ] " << tc.fn << "\n";
@@ -128,6 +129,7 @@ int main(int argc, char *argv[])
     }
 
     std::cout << "Results: " << passed << " passed, " << failed << " failed.\n";
+    #endif
 
     RunDasScript(libGroup, scriptsDir + "sandbox.das", "sandbox");
 

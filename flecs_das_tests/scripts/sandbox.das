@@ -67,6 +67,89 @@ int main(int argc, char *argv[]) {
 }
 */
 
+/*
+
+#define ecs_query(world, ...)\
+    ecs_query_init(world, &(ecs_query_desc_t) __VA_ARGS__ )
+
+ecs_query_t* ecs_query_init(
+    ecs_world_t *world,
+    const ecs_query_desc_t *desc);
+
+ecs_query_desc_t q_desc = {
+    .terms = {
+        { .id = ecs_id(Position) }, 
+        { .id = ecs_id(Velocity), .inout = EcsIn}
+    },
+    .cache_kind = EcsQueryCacheAuto
+};
+
+OR
+
+ecs_term_t term_pos;
+term_pos.id = ecs_id(Position);
+
+ecs_term_t term_vel;
+term_vel.id = ecs_id(Velocity);
+term_vel.inout = EcsIn;
+
+ecs_term_t terms[] = { term_pos, term_vel };
+
+ecs_query_cache_kind_t cache_kind = EcsQueryCacheAuto;
+
+ecs_query_desc_t q_desc;
+q_desc.terms = terms;
+q_desc.cache_kind = cache_kind;
+
+
+let term_pos = ecs_term_t(id=ecs_id(Position))
+let term_vel = ecs_term_t(id=ecs_id(Velocity), inout=EcsIn)
+let q_desc = ecs_query_desc_t(terms=[term_pos, term_vel], cache_kind=EcsQueryCacheAuto)
+
+*/
+
+
+
+/* ======== TESTING FOR BETER HELPER FUNCTIONS/WRAPPERS ======== */
+
+def ecs_query_builder(world : ecs_world_t?, var terms : array<ecs_term_t>, cache_kind : int) : ecs_query_t? {
+    var q_desc : ecs_query_desc_t
+    for (i in range(length(terms))) {
+        flecs_query_desc_set_term(q_desc, i, terms[i].id, int(terms[i].inout))
+    }
+    flecs_query_desc_set_cache_kind(q_desc, cache_kind)
+
+    var q : ecs_query_t?
+    unsafe { 
+        q = ecs_query_init(world, addr(q_desc)) 
+    }
+
+    return q
+}
+
+def ecs_term(id: ecs_entity_t; inout: int = EcsInOutDefault) : ecs_term_t {
+    let term : ecs_term_t = ecs_term_t(id=id, inout=int16(inout))
+
+    return term
+}
+
+def ecs_term(world : ecs_world_t?, cmp : type<auto(T)>, inout : int = EcsInOutDefault) : ecs_term_t {
+    let id : ecs_entity_t = ecs_component_register(world, type<T>)
+    let term : ecs_term_t = ecs_term_t(id=id, inout=int16(inout))
+
+    return term
+}
+
+def ecs_set(world : ecs_world_t?, entity : ecs_entity_t, var value : auto(T)) : void {
+    ecs_set(world, entity, ecs_component_register(world, type<T>), value)
+}
+
+/* ============================================================= */
+
+
+
+
+
 
 
 
@@ -91,6 +174,7 @@ struct Velocity {
     x : double
     y : double
 }
+
 
 
 // Using C functions directly, without any defines or helpers, to test the raw bindings and unsafe blocks.
@@ -209,20 +293,28 @@ def layer_2() : void {
     let vel_id = ecs_component_register(world, type<Velocity>)
 
     // --- Build query via expression string ---
-    let q = ecs_query_str(world, "Position, [in] Velocity")
+    // let q = ecs_query_str(world, "Position, [in] Velocity") // another option, using string expressions for queries. Note: this is more expensive at runtime due to parsing, but can be more concise and readable for complex queries.
+    let q = ecs_query_builder(
+        world, 
+        [
+            ecs_term(world, type<Position>),
+            ecs_term(world, type<Velocity>, EcsIn)
+        ], 
+        EcsQueryCacheAuto
+    )
 
     // --- Create entities with ecs_entity_new + ecs_set ---
     let e1 = ecs_entity_new(world, "e1")
-    ecs_set(world, e1, pos_id, Position(x=10.0d, y=20.0d))
-    ecs_set(world, e1, vel_id, Velocity(x=1.0d, y=2.0d))
+    ecs_set(world, e1, Position(x=10.0d, y=20.0d))
+    ecs_set(world, e1, Velocity(x=1.0d, y=2.0d))
 
     let e2 = ecs_entity_new(world, "e2")
-    ecs_set(world, e2, pos_id, Position(x=10.0d, y=20.0d))
-    ecs_set(world, e2, vel_id, Velocity(x=3.0d, y=4.0d))
+    ecs_set(world, e2, Position(x=10.0d, y=20.0d))
+    ecs_set(world, e2, Velocity(x=3.0d, y=4.0d))
 
     // e3: Position only — will not match the query
     let e3 = ecs_entity_new(world, "e3")
-    ecs_set(world, e3, pos_id, Position(x=10.0d, y=20.0d))
+    ecs_set(world, e3, Position(x=10.0d, y=20.0d))
 
     // --- Iterate using ecs_field ---
     var it = ecs_query_iter(world, q)
