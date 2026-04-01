@@ -42,6 +42,12 @@ PRIMITIVE_BASE_TYPES = {
     "size_t", "ptrdiff_t",
 }
 
+# Daslang reserved keywords that need field name mapping
+# C name : Daslang name
+DAS_RESERVED_FIELD_RENAMES = {
+    "type": "vtype",
+}
+
 
 # ─── Comment stripping ────────────────────────────────────────────────────────
 def strip_comments(text: str) -> str:
@@ -516,8 +522,9 @@ def gen_annotations(
             f' : ManagedStructureAnnotation("{name}", ml) {{'
         )
         for field in fields:
+            das_name = DAS_RESERVED_FIELD_RENAMES.get(field, field)
             lines.append(
-                f'        addField<DAS_BIND_MANAGED_FIELD({field})>("{field}", "{field}");'
+                f'        addField<DAS_BIND_MANAGED_FIELD({field})>("{das_name}", "{field}");'
             )
         lines.append("    }")
         lines.append("};")
