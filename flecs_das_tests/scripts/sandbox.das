@@ -69,6 +69,19 @@ int main(int argc, char *argv[]) {
 
 
 
+
+[export]
+def sandbox() : void {
+    print("=== Flecs Sandbox ===\n")
+    print("--- Layer 1: Basic world setup, component registration, query, and iteration ---\n")
+    layer_1()
+    print("\n--- Layer 2: Wrappers for flecs_c.h convenience macros ---\n")
+    layer_2()
+    print("\n=== End of Sandbox ===")
+}
+
+
+
 struct Position {
     x : double
     y : double
@@ -80,31 +93,18 @@ struct Velocity {
 }
 
 
-
-[export]
-def sandbox() : void {
-    print("=== Flecs Sandbox ===\n")
-    print("--- Layer 1: Basic world setup, component registration, query, and iteration ---\n")
-    layer_1()
-    print("\n--- Layer 2: Placeholder for future tests ---\n")
-    layer_2()
-    print("\n=== End of Sandbox ===")
-}
-
-
-
 // Using C functions directly, without any defines or helpers, to test the raw bindings and unsafe blocks.
 def layer_1() : void {
     var world : ecs_world_t? = ecs_init()
 
     // --- Register Position component (ECS_COMPONENT equivalent) ---
-    let pos_edesc : ecs_entity_desc_t = ecs_entity_desc_t(name="Position", use_low_id=true)
+    let pos_edesc = ecs_entity_desc_t(name="Position", use_low_id=true)
     var pos_entity : ecs_entity_t
     unsafe { 
         pos_entity = ecs_entity_init(world, addr(pos_edesc)) 
     }
 
-    let pos_cdesc : ecs_component_desc_t = ecs_component_desc_t(
+    let pos_cdesc = ecs_component_desc_t(
         entity = pos_entity,
         vtype = ecs_type_info_t(size=typeinfo sizeof(type<Position>), 
         alignment=typeinfo alignof(type<Position>))
@@ -200,7 +200,45 @@ def layer_1() : void {
 
 
 
-// Using wrappers for defines and helpers, to mimic typical flecs usage.
-def layer_2() : bool {
-    return true
+// Using Layer 2 wrappers (flecs_c.das) to mimic typical flecs C macro usage.
+def layer_2() : void {
+    var world : ecs_world_t? = ecs_init()
+
+    // --- ECS_COMPONENT equivalent ---
+    let pos_id = ecs_component_register(world, type<Position>)
+    let vel_id = ecs_component_register(world, type<Velocity>)
+
+    // --- Build query via expression string ---
+    let q = ecs_query_str(world, "Position, [in] Velocity")
+
+    // --- Create entities with ecs_entity_new + ecs_set ---
+    let e1 = ecs_entity_new(world, "e1")
+    ecs_set(world, e1, pos_id, Position(x=10.0d, y=20.0d))
+    ecs_set(world, e1, vel_id, Velocity(x=1.0d, y=2.0d))
+
+    let e2 = ecs_entity_new(world, "e2")
+    ecs_set(world, e2, pos_id, Position(x=10.0d, y=20.0d))
+    ecs_set(world, e2, vel_id, Velocity(x=3.0d, y=4.0d))
+
+    // e3: Position only — will not match the query
+    let e3 = ecs_entity_new(world, "e3")
+    ecs_set(world, e3, pos_id, Position(x=10.0d, y=20.0d))
+
+    // --- Iterate using ecs_field ---
+    var it = ecs_query_iter(world, q)
+    unsafe {
+        while (ecs_query_next(addr(it))) {
+            var p = reinterpret<Position?>(ecs_field_mut(addr(it), typeinfo sizeof(type<Position>), int8(0)))
+            var v = reinterpret<Velocity?>(ecs_field_mut(addr(it), typeinfo sizeof(type<Velocity>), int8(1)))
+            for (i in range(it.count)) {
+                p[i].x += v[i].x
+                p[i].y += v[i].y
+                let name = ecs_get_name(world, it.entities[i])
+                print("{name}: \{\{ {p[i].x}, {p[i].y} \}\}\n")
+            }
+        }
+    }
+
+    ecs_query_fini(q)
+    ecs_fini(world)
 }
