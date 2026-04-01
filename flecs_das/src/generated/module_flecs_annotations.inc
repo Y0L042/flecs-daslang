@@ -74,7 +74,7 @@ struct EcsVarAnnotation : das::DummyTypeAnnotation {
 MAKE_TYPE_FACTORY(ecs_header_t, ecs_header_t);
 struct EcsHeaderAnnotation : das::ManagedStructureAnnotation<ecs_header_t, false> {
     EcsHeaderAnnotation(das::ModuleLibrary &ml) : ManagedStructureAnnotation("ecs_header_t", ml) {
-        addField<DAS_BIND_MANAGED_FIELD(type)>("type", "type");
+        addField<DAS_BIND_MANAGED_FIELD(type)>("vtype", "type");
         addField<DAS_BIND_MANAGED_FIELD(refcount)>("refcount", "refcount");
         addField<DAS_BIND_MANAGED_FIELD(mixins)>("mixins", "mixins");
     }
@@ -168,7 +168,7 @@ struct EcsTypeInfoAnnotation : das::ManagedStructureAnnotation<ecs_type_info_t, 
 MAKE_TYPE_FACTORY(ecs_value_t, ecs_value_t);
 struct EcsValueAnnotation : das::ManagedStructureAnnotation<ecs_value_t, false> {
     EcsValueAnnotation(das::ModuleLibrary &ml) : ManagedStructureAnnotation("ecs_value_t", ml) {
-        addField<DAS_BIND_MANAGED_FIELD(type)>("type", "type");
+        addField<DAS_BIND_MANAGED_FIELD(type)>("vtype", "type");
         addField<DAS_BIND_MANAGED_FIELD(ptr)>("ptr", "ptr");
     }
 };
@@ -206,7 +206,7 @@ struct EcsComponentDescAnnotation : das::ManagedStructureAnnotation<ecs_componen
     EcsComponentDescAnnotation(das::ModuleLibrary &ml) : ManagedStructureAnnotation("ecs_component_desc_t", ml) {
         addField<DAS_BIND_MANAGED_FIELD(_canary)>("_canary", "_canary");
         addField<DAS_BIND_MANAGED_FIELD(entity)>("entity", "entity");
-        addField<DAS_BIND_MANAGED_FIELD(type)>("type", "type");
+        addField<DAS_BIND_MANAGED_FIELD(type)>("vtype", "type");
     }
 };
 
