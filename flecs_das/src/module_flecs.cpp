@@ -3,6 +3,39 @@
 #include <flecs.h>
 #include "scripts/flecs.das.inc"
 
+// --- Hand-written helpers ---
+
+static void flecs_set_query_expr(ecs_query_desc_t &desc, const char *expr) {
+    desc.expr = expr;
+}
+
+// ecs_set_id with ecs_size_t (int) instead of size_t (uint64) — matches typeinfo(sizeof ...).
+static void flecs_set_id(
+    ecs_world_t *world, ecs_entity_t entity, ecs_id_t id,
+    ecs_size_t size, void *ptr)
+{
+    ecs_set_id(world, entity, id, (size_t)size, ptr);
+}
+
+// ecs_field_w_size with ecs_size_t (int) instead of size_t (uint64).
+static void *flecs_field_w_size(ecs_iter_t *it, ecs_size_t size, int8_t index) {
+    return ecs_field_w_size(it, (size_t)size, index);
+}
+
+// Set a term in ecs_query_desc_t by index.
+// Required because terms[] is a fixed C array, not directly indexable from Daslang.
+static void flecs_query_desc_set_term(
+    ecs_query_desc_t &desc, int32_t idx, ecs_id_t id, int32_t inout)
+{
+    desc.terms[idx].id = id;
+    desc.terms[idx].inout = (ecs_inout_kind_t)inout;
+}
+
+// Set cache_kind on ecs_query_desc_t.
+static void flecs_query_desc_set_cache_kind(ecs_query_desc_t &desc, int32_t cache_kind) {
+    desc.cache_kind = (ecs_query_cache_kind_t)cache_kind;
+}
+
 // --- Hand-written annotations (keep these; generator skips them) ---
 
 MAKE_TYPE_FACTORY(ecs_world_t, ecs_world_t);
@@ -56,6 +89,18 @@ class Module_flecs : public das::Module
 
         // Generated registrations
 #include "generated/module_flecs_register.inc"
+
+        // Hand-written helpers
+        das::addExtern<DAS_BIND_FUN(flecs_set_query_expr)>(*this, lib, "ecs_query_desc_set_expr",
+            das::SideEffects::modifyArgument, "flecs_set_query_expr");
+        das::addExtern<DAS_BIND_FUN(flecs_set_id)>(*this, lib, "flecs_set_id",
+            das::SideEffects::modifyExternal, "flecs_set_id");
+        das::addExtern<DAS_BIND_FUN(flecs_field_w_size)>(*this, lib, "flecs_field_w_size",
+            das::SideEffects::modifyExternal, "flecs_field_w_size");
+        das::addExtern<DAS_BIND_FUN(flecs_query_desc_set_term)>(*this, lib, "flecs_query_desc_set_term",
+            das::SideEffects::modifyArgument, "flecs_query_desc_set_term");
+        das::addExtern<DAS_BIND_FUN(flecs_query_desc_set_cache_kind)>(*this, lib, "flecs_query_desc_set_cache_kind",
+            das::SideEffects::modifyArgument, "flecs_query_desc_set_cache_kind");
 
         compileBuiltinModule("flecs.das", flecs_das, sizeof(flecs_das));
     }
