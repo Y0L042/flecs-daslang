@@ -9,6 +9,15 @@ newoption {
 SolutionRoot = ".."
 ProjectRoot = "."
 
+-- Vendor path overrides: consuming workspaces can set these before including this file
+-- to redirect flecs_das to use their own pre-built copies of flecs and daslang.
+FLECS_DAS_FLECS_INCLUDE   = FLECS_DAS_FLECS_INCLUDE   or "%{wks.location}/flecs_das/vendor/flecs/include"
+FLECS_DAS_DASLANG_INCLUDE = FLECS_DAS_DASLANG_INCLUDE or "%{wks.location}/flecs_das/vendor/daslang/include"
+FLECS_DAS_FLECS_LIBDIR    = FLECS_DAS_FLECS_LIBDIR    or ("%{wks.location}/flecs_das/vendor/flecs/" .. VISUAL_STUDIO_BUILD_DIR .. "/Debug")
+FLECS_DAS_FLECS_LIBDIR_REL = FLECS_DAS_FLECS_LIBDIR_REL or ("%{wks.location}/flecs_das/vendor/flecs/" .. VISUAL_STUDIO_BUILD_DIR .. "/Release")
+FLECS_DAS_DASLANG_LIBDIR  = FLECS_DAS_DASLANG_LIBDIR  or "%{wks.location}/flecs_das/vendor/daslang/lib/Debug"
+FLECS_DAS_DASLANG_LIBDIR_REL = FLECS_DAS_DASLANG_LIBDIR_REL or "%{wks.location}/flecs_das/vendor/daslang/lib/Release"
+
 project "flecs_das"
     kind "StaticLib"
     language "C++"
@@ -21,28 +30,33 @@ project "flecs_das"
 
     includedirs { "src" }
 
-    -- Use workspace-location-aware paths for external includes
     externalincludedirs {
-        "%{wks.location}/flecs_das/vendor/flecs/include",
-        "%{wks.location}/flecs_das/vendor/daslang/include",
+        FLECS_DAS_FLECS_INCLUDE,
+        FLECS_DAS_DASLANG_INCLUDE,
     }
 
-    defines { 
-        "flecs_STATIC" ,        
+    defines {
+        "flecs_STATIC" ,
         "DAS_SMART_PTR_DEBUG=1",
         "DAS_ENABLE_DYN_INCLUDES=1",
         "DAS_ENABLE_EXCEPTIONS=1",
     }
 
     libdirs {
-        "%{wks.location}/flecs_das/vendor/flecs/" .. VISUAL_STUDIO_BUILD_DIR .. "/Debug",
-        "%{wks.location}/flecs_das/vendor/daslang/lib/Debug",
+        FLECS_DAS_FLECS_LIBDIR,
+        FLECS_DAS_DASLANG_LIBDIR,
+    }
+
+    links {
+        "flecs_static.lib",
+        "libDaScript.lib",
+        "libUriParser.lib",
     }
 
     filter "action:vs*"
-        buildoptions { 
-            "/utf-8", 
-            '/Zc:__cplusplus', 
+        buildoptions {
+            "/utf-8",
+            '/Zc:__cplusplus',
             '/Zc:preprocessor' ,
             '/bigobj'
         }  -- Changed: Added /utf-8 flag for Unicode support
@@ -52,21 +66,13 @@ project "flecs_das"
     filter "configurations:Debug"
         symbols "On"
         optimize "Off"
-        links {
-            "flecs_static.lib",
-            "libDaScript.lib",
-        }
 
     filter "configurations:Release"
         optimize "Speed"
         symbols "Off"
         libdirs {
-            "%{wks.location}/flecs_das/vendor/flecs/" .. VISUAL_STUDIO_BUILD_DIR .. "/Release",
-            "%{wks.location}/flecs_das/vendor/daslang/lib/Release",
-        }
-        links {
-            "flecs_static.lib",
-            "libDaScript.lib",
+            FLECS_DAS_FLECS_LIBDIR_REL,
+            FLECS_DAS_DASLANG_LIBDIR_REL,
         }
 
 
