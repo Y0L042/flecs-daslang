@@ -112,37 +112,7 @@ let q_desc = ecs_query_desc_t(terms=[term_pos, term_vel], cache_kind=EcsQueryCac
 
 /* ======== TESTING FOR BETER HELPER FUNCTIONS/WRAPPERS ======== */
 
-def ecs_query_builder(world : ecs_world_t?, var terms : array<ecs_term_t>, cache_kind : int) : ecs_query_t? {
-    var q_desc : ecs_query_desc_t
-    for (i in range(length(terms))) {
-        flecs_query_desc_set_term(q_desc, i, terms[i].id, int(terms[i].inout))
-    }
-    flecs_query_desc_set_cache_kind(q_desc, cache_kind)
 
-    var q : ecs_query_t?
-    unsafe { 
-        q = ecs_query_init(world, addr(q_desc)) 
-    }
-
-    return q
-}
-
-def ecs_term(id: ecs_entity_t; inout: int = EcsInOutDefault) : ecs_term_t {
-    let term : ecs_term_t = ecs_term_t(id=id, inout=int16(inout))
-
-    return term
-}
-
-def ecs_term(world : ecs_world_t?, cmp : type<auto(T)>, inout : int = EcsInOutDefault) : ecs_term_t {
-    let id : ecs_entity_t = ecs_component_register(world, type<T>)
-    let term : ecs_term_t = ecs_term_t(id=id, inout=int16(inout))
-
-    return term
-}
-
-def ecs_set(world : ecs_world_t?, entity : ecs_entity_t, var value : auto(T)) : void {
-    ecs_set(world, entity, ecs_component_register(world, type<T>), value)
-}
 
 /* ============================================================= */
 
@@ -160,6 +130,8 @@ def sandbox() : void {
     layer_1()
     print("\n--- Layer 2: Wrappers for flecs_c.h convenience macros ---\n")
     layer_2()
+    print("\n--- Layer 2b: Same as Layer 2, but with string expressions for queries, iterators for components ---\n")
+    layer_2b()
     print("\n=== End of Sandbox ===")
 }
 
@@ -319,9 +291,53 @@ def layer_2() : void {
     // --- Iterate using ecs_field ---
     var it = ecs_query_iter(world, q)
     unsafe {
-        while (ecs_query_next(addr(it))) {
-            var p = reinterpret<Position?>(ecs_field_mut(addr(it), typeinfo sizeof(type<Position>), int8(0)))
-            var v = reinterpret<Velocity?>(ecs_field_mut(addr(it), typeinfo sizeof(type<Velocity>), int8(1)))
+        while (ecs_query_next_iter(it)) {
+            var p : Position? = ecs_field_get(it, type<Position>, 0)
+            var v : Velocity? = ecs_field_get(it, type<Velocity>, 1)
+            for (i in range(it.count)) {
+                p[i].x += v[i].x
+                p[i].y += v[i].y
+                let name = ecs_get_name(world, it.entities[i])
+                print("{name}: \{\{ {p[i].x}, {p[i].y} \}\}\n")
+            }
+        }
+    }
+
+    ecs_query_fini(q)
+    ecs_fini(world)
+}
+
+def layer_2b() : void {
+    var world : ecs_world_t? = ecs_init()
+
+    // --- ECS_COMPONENT equivalent ---
+    let pos_id = ecs_component_register(world, type<Position>)
+    let vel_id = ecs_component_register(world, type<Velocity>)
+
+    // --- Build query via expression string ---
+    let q = ecs_query_str(world, "Position, [in] Velocity") 
+
+    // --- Create entities with ecs_entity_new + ecs_set ---
+    let e1 = ecs_entity_new(world, "e1")
+    ecs_set(world, e1, Position(x=10.0d, y=20.0d))
+    ecs_set(world, e1, Velocity(x=1.0d, y=2.0d))
+
+    let e2 = ecs_entity_new(world, "e2")
+    ecs_set(world, e2, Position(x=10.0d, y=20.0d))
+    ecs_set(world, e2, Velocity(x=3.0d, y=4.0d))
+
+    // e3: Position only — will not match the query
+    let e3 = ecs_entity_new(world, "e3")
+    ecs_set(world, e3, Position(x=10.0d, y=20.0d))
+
+    // --- Iterate using ecs_field ---
+    var it = ecs_query_iter(world, q)
+    unsafe {
+        while (ecs_query_next_iter(it)) {
+            // var p : iterator<Position> <- ecs_field_iter(it, type<Position>, 0)
+            var p : Position? = ecs_field_get(it, type<Position>, 0)
+            var v : Velocity? = ecs_field_get(it, type<Velocity>, 1)
+            // for (i, pi, vi in range(it.count), each(p), each(v)) {
             for (i in range(it.count)) {
                 p[i].x += v[i].x
                 p[i].y += v[i].y
