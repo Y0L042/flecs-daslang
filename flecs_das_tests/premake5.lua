@@ -3,6 +3,8 @@ project "flecs_das_tests"
     language "C++"
     cppdialect "C++17"
 
+local flecsDasRoot = "%{wks.location}/flecs_das"
+
     targetdir ("%{wks.location}/tests/bin/" .. outputdir .. "/%{prj.name}")
     objdir    ("%{wks.location}/tests/bin-int/" .. outputdir .. "/%{prj.name}")
 
@@ -10,12 +12,12 @@ project "flecs_das_tests"
 
     includedirs {
         "src",
-        "%{wks.location}/flecs_das/src",
+        flecsDasRoot .. "/src",
     }
 
     externalincludedirs {
-        "%{wks.location}/flecs_das/vendor/flecs/include",
-        "%{wks.location}/flecs_das/vendor/daslang/include",
+        FLECS_DAS_FLECS_INCLUDE,
+        FLECS_DAS_DASLANG_INCLUDE,
     }
 
     defines {
@@ -31,8 +33,8 @@ project "flecs_das_tests"
 
     libdirs {
         "%{wks.location}/flecs_das/bin/" .. outputdir .. "/flecs_das",
-        "%{wks.location}/flecs_das/vendor/flecs/build_vs2026/Debug",
-        "%{wks.location}/flecs_das/vendor/daslang/lib/Debug",
+        FLECS_DAS_FLECS_LIBDIR,
+        FLECS_DAS_DASLANG_LIBDIR,
     }
 
     filter "action:vs*"
@@ -49,22 +51,24 @@ project "flecs_das_tests"
         symbols "On"
         optimize "Off"
         links {
+            "flecs_static.lib",
             "libDaScript.lib",
             "libUriParser.lib",
         }
         libdirs {
-            "%{wks.location}/flecs_das/vendor/flecs/build_vs2026/Debug",
-            "%{wks.location}/flecs_das/vendor/daslang/lib/Debug",
+            FLECS_DAS_FLECS_LIBDIR,
+            FLECS_DAS_DASLANG_LIBDIR,
         }
 
     filter "configurations:Release"
         optimize "Speed"
         symbols "Off"
         links {
+            "flecs_static.lib",
             "libDaScript.lib",
             "libUriParser.lib",
         }
         libdirs {
-            "%{wks.location}/flecs_das/vendor/flecs/build_vs2026/Release",
-            "%{wks.location}/flecs_das/vendor/daslang/lib/Release",
+            FLECS_DAS_FLECS_LIBDIR_REL,
+            FLECS_DAS_DASLANG_LIBDIR_REL,
         }
