@@ -2,23 +2,28 @@ name: docs
 
 on:
   push:
+    branches: [ main ]
     paths:
       - docs/**
       - flecs_das/src/**
       - flecs_das_tests/src/**
       - flecs_das_tests/scripts/**
-      - manage.sh
-      - .github/workflows/docs.yml
+      - [manage.sh](http://_vscodecontentref_/2)
+      - [docs.yml](http://_vscodecontentref_/3)
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 concurrency:
-  group: docs-${{ github.ref }}
+  group: pages
   cancel-in-progress: true
 
 jobs:
   build-docs:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,12 +39,23 @@ jobs:
           sudo apt-get install -y doxygen graphviz
 
       - name: Build docs
-        run: bash manage.sh docs
+        run: bash [manage.sh](http://_vscodecontentref_/4) docs
 
-      - name: Upload docs artifact
-        uses: actions/upload-artifact@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: flecs-daslang-docs
           path: generated_docs/doxygen
-          if-no-files-found: error
-          retention-days: 14
+
+  deploy:
+    needs: build-docs
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
