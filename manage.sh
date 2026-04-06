@@ -18,6 +18,7 @@ FLECS_DAS="$SCRIPT_DIR/flecs_das/src/scripts/flecs.das"
 GEN_FLECS_C_BIND_PY="$SCRIPT_DIR/flecs_das/tools/gen_flecs_c_bindings.py"
 FLECS_C_H="$SCRIPT_DIR/flecs_das/vendor/flecs/include/flecs/addons/flecs_c.h"
 FLECS_C_DAS="$SCRIPT_DIR/flecs_das/src/scripts/flecs_c.das"
+DOXYGEN_DIR="$SCRIPT_DIR/docs"
 
 usage() {
     echo "Usage: $0 <command> [args]"
@@ -29,6 +30,7 @@ usage() {
     echo "  fmt <file.das>    Format a .das file in-place (backs up, formats, verifies)"
     echo "  fmt-all           Format all .das files under flecs_das/src"
     echo "  gen-flecs-c-bind  Generate flecs_c.das Layer 2 wrappers from gen_flecs_c_bindings.py"
+    echo "  docs              Build the Doxygen HTML documentation"
   echo "  codegen           Run the full pipeline: gen-flecs-bind, gen-flecs-c-bind, gen-inc, gen-adapter"
     echo "  help              Show this help message"
 }
@@ -108,6 +110,11 @@ cmd_codegen() {
     cmd_gen_adapter
 }
 
+cmd_docs() {
+    echo "Building Doxygen documentation..."
+    (cd "$DOXYGEN_DIR" && doxygen Doxyfile)
+}
+
 case "${1:-}" in
     gen-inc)         cmd_gen_inc ;;
     gen-adapter)     cmd_gen_adapter ;;
@@ -115,6 +122,7 @@ case "${1:-}" in
     gen-flecs-c-bind) cmd_gen_flecs_c_bind ;;
     fmt)             cmd_fmt "${2:-}" ;;
     fmt-all)         cmd_fmt_all ;;
+    docs)            cmd_docs ;;
     codegen)         cmd_codegen ;;
     help|"")         usage ;;
     *)               echo "Unknown command: $1"; usage; exit 1 ;;

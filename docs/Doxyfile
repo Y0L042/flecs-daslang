@@ -1,0 +1,63 @@
+PROJECT_NAME           = "flecs-daslang"
+PROJECT_BRIEF          = "daScript bindings for Flecs"
+PROJECT_NUMBER         = "0.1"
+
+OUTPUT_DIRECTORY       = ../generated_docs
+HTML_OUTPUT            = doxygen
+CREATE_SUBDIRS         = YES
+
+USE_MDFILE_AS_MAINPAGE = index.md
+MARKDOWN_SUPPORT       = YES
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = YES
+
+INPUT                  = ../flecs_das/src \
+                         ../flecs_das/src/scripts \
+                         ../flecs_das_tests/src \
+                         ../flecs_das_tests/scripts/README.md \
+                         index.md
+RECURSIVE              = YES
+FILE_PATTERNS          = *.h \
+                         *.hpp \
+                         *.cpp \
+                         *.das \
+                         *.md
+EXTENSION_MAPPING      = das=C
+
+EXCLUDE_PATTERNS       = */vendor/* \
+                         */bin/* \
+                         */bin-int/* \
+                         */generated/* \
+                         ../flecs_das_tests/scripts/*.das \
+                         *.inc
+
+FILTER_PATTERNS        = *.das="python doxygen_das_filter.py"
+
+INPUT_ENCODING         = UTF-8
+STRIP_FROM_PATH        = ..
+FULL_PATH_NAMES        = NO
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+
+EXTRACT_ALL            = YES
+EXTRACT_STATIC         = YES
+EXTRACT_PRIVATE        = NO
+HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_CLASSES     = NO
+SORT_MEMBER_DOCS       = NO
+SHOW_INCLUDE_FILES     = YES
+
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_XML           = NO
+GENERATE_TREEVIEW      = YES
+HTML_COLORSTYLE_HUE    = 15
+
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+SKIP_FUNCTION_MACROS   = YES
+
+QUIET                  = YES
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_IF_DOC_ERROR      = YES

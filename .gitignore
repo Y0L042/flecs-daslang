@@ -69,3 +69,5 @@ enc_temp_folder/
 /artifacts
 /.claude
 *.slnx
+.github/
+*.pyc
