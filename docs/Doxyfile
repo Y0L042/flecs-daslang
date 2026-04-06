@@ -31,7 +31,7 @@ EXCLUDE_PATTERNS       = */vendor/* \
                          ../flecs_das_tests/scripts/*.das \
                          *.inc
 
-FILTER_PATTERNS        = *.das="python doxygen_das_filter.py"
+FILTER_PATTERNS        = *.das="python3 doxygen_das_filter.py"
 
 INPUT_ENCODING         = UTF-8
 STRIP_FROM_PATH        = ..

@@ -112,6 +112,7 @@ cmd_codegen() {
 
 cmd_docs() {
     echo "Building Doxygen documentation..."
+    mkdir -p "$SCRIPT_DIR/generated_docs"
     (cd "$DOXYGEN_DIR" && doxygen Doxyfile)
 }
 

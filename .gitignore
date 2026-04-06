@@ -71,3 +71,5 @@ enc_temp_folder/
 *.slnx
 .github/
 *.pyc
+__pycache__/
+generated_docs/
