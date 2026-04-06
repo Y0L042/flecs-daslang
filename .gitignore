@@ -69,7 +69,7 @@ enc_temp_folder/
 /artifacts
 /.claude
 *.slnx
-.github/
+.github/copilot-instructions.md
 *.pyc
 __pycache__/
 generated_docs/

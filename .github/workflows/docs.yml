@@ -1,0 +1,45 @@
+name: docs
+
+on:
+  push:
+    paths:
+      - docs/**
+      - flecs_das/src/**
+      - flecs_das_tests/src/**
+      - flecs_das_tests/scripts/**
+      - manage.sh
+      - .github/workflows/docs.yml
+  workflow_dispatch:
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Doxygen and Graphviz
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen graphviz
+
+      - name: Build docs
+        run: bash manage.sh docs
+
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flecs-daslang-docs
+          path: generated_docs/doxygen
+          if-no-files-found: error
+          retention-days: 14
