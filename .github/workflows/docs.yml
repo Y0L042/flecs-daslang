@@ -8,8 +8,8 @@ on:
       - flecs_das/src/**
       - flecs_das_tests/src/**
       - flecs_das_tests/scripts/**
-      - [manage.sh](http://_vscodecontentref_/2)
-      - [docs.yml](http://_vscodecontentref_/3)
+      - manage.sh
+      - .github/workflows/docs.yml
   workflow_dispatch:
 
 permissions:
@@ -39,7 +39,7 @@ jobs:
           sudo apt-get install -y doxygen graphviz
 
       - name: Build docs
-        run: bash [manage.sh](http://_vscodecontentref_/4) docs
+        run: bash manage.sh docs
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
