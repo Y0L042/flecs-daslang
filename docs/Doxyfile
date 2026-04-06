@@ -14,6 +14,7 @@ QT_AUTOBRIEF           = YES
 INPUT                  = ../flecs_das/src \
                          ../flecs_das/src/scripts \
                          ../flecs_das_tests/src \
+                         ../flecs_das_tests/scripts/sandbox.das \
                          ../flecs_das_tests/scripts/README.md \
                          index.md
 RECURSIVE              = YES
@@ -28,7 +29,8 @@ EXCLUDE_PATTERNS       = */vendor/* \
                          */bin/* \
                          */bin-int/* \
                          */generated/* \
-                         ../flecs_das_tests/scripts/*.das \
+                         ../flecs_das_tests/scripts/test_*.das \
+                         ../flecs_das_tests/scripts/das_test.das \
                          *.inc
 
 FILTER_PATTERNS        = *.das="python3 doxygen_das_filter.py"
@@ -51,7 +53,7 @@ GENERATE_HTML          = YES
 GENERATE_LATEX         = NO
 GENERATE_XML           = NO
 GENERATE_TREEVIEW      = YES
-HTML_COLORSTYLE_HUE    = 15
+HTML_COLORSTYLE_HUE    = 160
 
 ENABLE_PREPROCESSING   = YES
 MACRO_EXPANSION        = YES

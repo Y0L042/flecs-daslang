@@ -4,6 +4,13 @@ This directory contains DASLang test scripts for the `flecs_das` module binding.
 
 ## Test Files
 
+### sandbox.das
+Interactive sandbox and reference example for binding usage:
+- `sandbox()`: Runs all sandbox layers in sequence.
+- `layer_1()`: Uses raw C-level Flecs bindings and explicit descriptors.
+- `layer_2()`: Uses helper wrappers from `flecs_c.das`.
+- `layer_2b()`: Uses string-based query expressions plus field helpers.
+
 ### test_world.das
 Tests basic world lifecycle operations:
 - `test_world_creation()`: Tests world creation, finalization, and state checks

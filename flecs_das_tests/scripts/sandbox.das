@@ -1,6 +1,20 @@
 options gen2
 require flecs
 
+/**
+ * @file sandbox.das
+ * @brief Interactive sandbox script for validating flecs_das bindings.
+ *
+ * This script is not a strict pass/fail test suite. It is a staged playground
+ * that demonstrates equivalent ways to build worlds, register components,
+ * compose queries, and iterate results through different API layers.
+ *
+ * Layers:
+ * - layer_1: raw C-level bindings and explicit descriptors.
+ * - layer_2: helper wrappers that mimic common Flecs C macro workflows.
+ * - layer_2b: query expression string variant and field access helpers.
+ */
+
 
 
 /*
@@ -124,6 +138,7 @@ let q_desc = ecs_query_desc_t(terms=[term_pos, term_vel], cache_kind=EcsQueryCac
 
 
 [export]
+/// @brief Runs all sandbox layers in sequence and prints sample output.
 def sandbox() : void {
     print("=== Flecs Sandbox ===\n")
     print("--- Layer 1: Basic world setup, component registration, query, and iteration ---\n")
@@ -150,6 +165,7 @@ struct Velocity {
 
 
 // Using C functions directly, without any defines or helpers, to test the raw bindings and unsafe blocks.
+/// @brief Raw bindings path using explicit component/query descriptors.
 def layer_1() : void {
     var world : ecs_world_t? = ecs_init()
 
@@ -257,6 +273,7 @@ def layer_1() : void {
 
 
 // Using Layer 2 wrappers (flecs_c.das) to mimic typical flecs C macro usage.
+/// @brief Wrapper-driven path with typed helper utilities.
 def layer_2() : void {
     var world : ecs_world_t? = ecs_init()
 
@@ -307,6 +324,7 @@ def layer_2() : void {
     ecs_fini(world)
 }
 
+/// @brief Wrapper path that builds query terms from an expression string.
 def layer_2b() : void {
     var world : ecs_world_t? = ecs_init()
 
