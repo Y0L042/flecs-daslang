@@ -1,12 +1,14 @@
+SolutionRoot = SolutionRoot or "../../.."
+
 project "flecs_das_tests"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
 
-local flecsDasRoot = "%{wks.location}/flecs_das"
+    local flecsDasRoot = path.join("%{prj.location}", "..", "flecs_das")
 
-    targetdir ("%{wks.location}/tests/bin/" .. outputdir .. "/%{prj.name}")
-    objdir    ("%{wks.location}/tests/bin-int/" .. outputdir .. "/%{prj.name}")
+    targetdir ("%{wks.location}/Duin/vendor/flecs-daslang/flecs_das_tests/bin/" .. outputdir .. "/%{prj.name}")
+    objdir    ("%{wks.location}/Duin/vendor/flecs-daslang/flecs_das_tests/bin-int/" .. outputdir .. "/%{prj.name}")
 
     files { "src/**.h", "src/**.cpp" }
 
@@ -20,55 +22,35 @@ local flecsDasRoot = "%{wks.location}/flecs_das"
         FLECS_DAS_DASLANG_INCLUDE,
     }
 
+    defines(global_defines)
     defines {
-        "flecs_STATIC",
         "DAS_SMART_PTR_DEBUG=1",
-        "DAS_ENABLE_DYN_INCLUDES=1",
         "DAS_ENABLE_EXCEPTIONS=1",
     }
 
-    links {
-        "flecs_das",
-    }
+    libdirs(prependRoot(SolutionRoot, global_libdirs))
 
-    libdirs {
-        "%{wks.location}/flecs_das/bin/" .. outputdir .. "/flecs_das",
-        FLECS_DAS_FLECS_LIBDIR,
-        FLECS_DAS_DASLANG_LIBDIR,
-    }
+    links(global_links)
 
     filter "action:vs*"
-        buildoptions { 
-            "/utf-8", 
-            '/Zc:__cplusplus', 
-            '/Zc:preprocessor' ,
-            '/bigobj'
-        }  -- Changed: Added /utf-8 flag for Unicode support
+        buildoptions {
+            "/utf-8",
+            '/Zc:__cplusplus',
+            '/Zc:preprocessor',
+            '/bigobj',
+        }
         multiprocessorcompile "On"
     filter {}
 
     filter "configurations:Debug"
         symbols "On"
         optimize "Off"
-        links {
-            "flecs_static.lib",
-            "libDaScript.lib",
-            "libUriParser.lib",
-        }
-        libdirs {
-            FLECS_DAS_FLECS_LIBDIR,
-            FLECS_DAS_DASLANG_LIBDIR,
-        }
+        staticruntime "On"
+        runtime "Debug"
 
     filter "configurations:Release"
         optimize "Speed"
         symbols "Off"
-        links {
-            "flecs_static.lib",
-            "libDaScript.lib",
-            "libUriParser.lib",
-        }
-        libdirs {
-            FLECS_DAS_FLECS_LIBDIR_REL,
-            FLECS_DAS_DASLANG_LIBDIR_REL,
-        }
+        staticruntime "On"
+        runtime "Release"
+    filter {}
