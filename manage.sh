@@ -11,14 +11,31 @@ DAS_FORMATTER="$SCRIPT_DIR/flecs_das/vendor/daslang/utils/dasCodeFormatter/main.
 DASROOT="$SCRIPT_DIR/flecs_das/vendor/daslang"
 
 GEN_FLECS_BIND_PY="$SCRIPT_DIR/flecs_das/tools/gen_flecs_bindings.py"
-FLECS_H="$SCRIPT_DIR/flecs_das/vendor/flecs/include/flecs.h"
 GENERATED_DIR="$SCRIPT_DIR/flecs_das/src/generated"
 FLECS_DAS="$SCRIPT_DIR/flecs_das/src/scripts/flecs.das"
 
 GEN_FLECS_C_BIND_PY="$SCRIPT_DIR/flecs_das/tools/gen_flecs_c_bindings.py"
-FLECS_C_H="$SCRIPT_DIR/flecs_das/vendor/flecs/include/flecs/addons/flecs_c.h"
 FLECS_C_DAS="$SCRIPT_DIR/flecs_das/src/scripts/flecs_c.das"
 DOXYGEN_DIR="$SCRIPT_DIR/docs"
+
+# Resolve Flecs headers from either:
+# 1) local checkout under flecs-daslang/flecs
+# 2) sibling Duin vendor checkout under ../flecs
+if [[ -f "$SCRIPT_DIR/flecs/include/flecs.h" ]]; then
+    FLECS_H="$SCRIPT_DIR/flecs/include/flecs.h"
+elif [[ -f "$SCRIPT_DIR/../flecs/include/flecs.h" ]]; then
+    FLECS_H="$SCRIPT_DIR/../flecs/include/flecs.h"
+else
+    FLECS_H="$SCRIPT_DIR/flecs/include/flecs.h"
+fi
+
+if [[ -f "$SCRIPT_DIR/flecs/include/flecs/addons/flecs_c.h" ]]; then
+    FLECS_C_H="$SCRIPT_DIR/flecs/include/flecs/addons/flecs_c.h"
+elif [[ -f "$SCRIPT_DIR/../flecs/include/flecs/addons/flecs_c.h" ]]; then
+    FLECS_C_H="$SCRIPT_DIR/../flecs/include/flecs/addons/flecs_c.h"
+else
+    FLECS_C_H="$SCRIPT_DIR/flecs/include/flecs/addons/flecs_c.h"
+fi
 
 usage() {
     echo "Usage: $0 <command> [args]"

@@ -48,6 +48,21 @@ DAS_RESERVED_FIELD_RENAMES = {
     "type": "vtype",
 }
 
+# Some FLECS_API extern const declarations are present in headers but are not
+# exported by every Flecs build configuration that consumers link against.
+# Keep these out of the generated binding surface unless the binding gains a
+# build-config-aware export check.
+SKIP_EXTERN_CONSTS = {
+    "ecs_id(EcsComponent)",
+    "ecs_id(EcsIdentifier)",
+    "ecs_id(EcsPoly)",
+    "ecs_id(EcsDefaultChildComponent)",
+    "ecs_id(EcsTickSource)",
+    "ecs_id(EcsPipelineQuery)",
+    "ecs_id(EcsTimer)",
+    "ecs_id(EcsRateFilter)",
+}
+
 
 # ─── Comment stripping ────────────────────────────────────────────────────────
 def strip_comments(text: str) -> str:
@@ -286,6 +301,82 @@ def parse_enums(text: str) -> list:
                 members.append(name)
         results.append((enum_name, members))
     return results
+
+
+# ─── FLECS_API extern const parsing ──────────────────────────────────────────
+def parse_extern_consts(text: str) -> list:
+    """Return [(c_type, symbol_expr)] for FLECS_API extern const declarations."""
+    pat = re.compile(
+        r"FLECS_API\s+extern\s+const\s+([A-Za-z_]\w*)\s+([^;]+?)\s*;"
+    )
+    results = []
+    for m in pat.finditer(text):
+        c_type = m.group(1).strip()
+        symbol_expr = m.group(2).strip()
+        if not symbol_expr:
+            continue
+        results.append((c_type, symbol_expr))
+    return results
+
+
+def sanitize_const_symbol(symbol_expr: str) -> str:
+    """Convert C constant expression to a stable, function-safe identifier suffix."""
+    cleaned = symbol_expr.strip()
+    cleaned = cleaned.replace("::", "_")
+    cleaned = cleaned.replace("(", "_")
+    cleaned = cleaned.replace(")", "")
+    cleaned = cleaned.replace(",", "_")
+    cleaned = cleaned.replace(" ", "")
+    cleaned = re.sub(r"[^A-Za-z0-9_]", "_", cleaned)
+    cleaned = re.sub(r"_+", "_", cleaned).strip("_")
+    if not cleaned:
+        cleaned = "Const"
+    if cleaned[0].isdigit():
+        cleaned = f"Const_{cleaned}"
+    return cleaned
+
+
+def collect_supported_extern_consts(extern_consts: list) -> list:
+    """
+    Keep externally useful Flecs constants and attach generated getter names.
+
+    Returns list of dicts:
+      {
+        'c_type': 'ecs_entity_t'|'ecs_id_t',
+        'expr': 'EcsTarget'|'ecs_id(EcsComponent)'|...,
+        'das_name': 'EcsTarget'
+      }
+    """
+    supported_types = {"ecs_entity_t", "ecs_id_t"}
+    out = []
+    seen_names = set()
+
+    for c_type, expr in extern_consts:
+        if expr in SKIP_EXTERN_CONSTS:
+            continue
+
+        if c_type not in supported_types:
+            continue
+
+        keep = (
+            expr.startswith("Ecs")
+            or expr.startswith("ECS_")
+        )
+        if not keep:
+            continue
+
+        suffix = sanitize_const_symbol(expr)
+        if suffix in seen_names:
+            continue
+        seen_names.add(suffix)
+
+        out.append({
+            "c_type": c_type,
+            "expr": expr,
+            "das_name": suffix,
+        })
+
+    return out
 
 
 # ─── FLECS_API function parsing ───────────────────────────────────────────────
@@ -540,6 +631,7 @@ def gen_register(
     skip_structs: set,
     skip_funcs: set,
     extra_opaque: list = (),
+    extern_consts: list = (),
 ) -> str:
     lines = [_HEADER]
 
@@ -567,6 +659,17 @@ def gen_register(
     lines.append("")
     lines.append("// --- Function registrations ---")
     lines.append("")
+
+    for item in extern_consts:
+        name = item["das_name"]
+        expr = item["expr"]
+        c_type = item["c_type"]
+        lines.append(
+            f"addConstant(*this, \"{name}\", ({c_type}){expr});"
+        )
+
+    if extern_consts:
+        lines.append("")
 
     for ret_type, func_name, params, classification in functions:
         if func_name in skip_funcs:
@@ -667,6 +770,7 @@ def main():
     )
 
     enums = parse_enums(text)
+    extern_consts = collect_supported_extern_consts(parse_extern_consts(text))
 
     # ── Functions ────────────────────────────────────────────────────────────
     raw_decls = collect_flecs_api_decls(text)
@@ -712,6 +816,7 @@ def main():
     print(f"  Opaque structs:   {len(opaque_names)}")
     print(f"  Defined structs:  {len(defined_structs)}")
     print(f"  Enums:            {len(enums)}")
+    print(f"  Extern consts:    {len(extern_consts)}")
     print(f"  Functions:        {len(functions)}")
     print(f"  Skipped (params): {skipped_params}")
     skipped_copy = [f for _, f, _, c in functions if c == "skip"]
@@ -732,7 +837,8 @@ def main():
 
     with open(reg_path, "w", newline="\n") as f:
         f.write(gen_register(opaque_names, defined_structs, functions,
-                             SKIP_STRUCTS, SKIP_FUNCS, extra_opaque))
+                             SKIP_STRUCTS, SKIP_FUNCS, extra_opaque,
+                             extern_consts))
     print(f"  Wrote {reg_path}")
 
     # ── Update flecs.das ──────────────────────────────────────────────────────
