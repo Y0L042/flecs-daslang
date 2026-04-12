@@ -20,8 +20,10 @@ externalincludedirs {
 
 defines {
     "flecs_STATIC",
-    "DAS_SMART_PTR_DEBUG=1",
     "DAS_ENABLE_EXCEPTIONS=1",
+    "DAS_SMART_PTR_DEBUG=1",
+    "DAS_ENABLE_DLL=1",
+    "DAS_MOD_EXPORTS",
 }
 
 -- Static libs must not link other static libs — consumers (executables) own those links.
@@ -44,13 +46,13 @@ filter {}
 filter "configurations:Debug"
 symbols "On"
 optimize "Off"
-staticruntime "On"
+staticruntime "Off"
 runtime "Debug"
 
 filter "configurations:Release"
 optimize "Speed"
 symbols "Off"
-staticruntime "On"
+staticruntime "Off"
 runtime "Release"
 libdirs {
     FLECS_DAS_FLECS_LIBDIR_REL,

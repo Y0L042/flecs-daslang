@@ -128,9 +128,19 @@ struct EcsEntitesAnnotation : das::ManagedStructureAnnotation<ecs_entities_t, fa
 /// daScript module entry point for the flecs binding package.
 class Module_flecs : public das::Module
 {
+    bool initialized = false;
+
   public:
     Module_flecs() : Module("flecs")
     {
+    }
+
+    bool initDependencies() override
+    {
+        if (initialized)
+            return true;
+        initialized = true;
+
         das::ModuleLibrary lib(this);
         lib.addBuiltInModule();
 
@@ -175,6 +185,8 @@ class Module_flecs : public das::Module
         compileBuiltinModule("flecs.das", flecs_das, sizeof(flecs_das));
         compileBuiltinModule("flecs_c.das", flecs_c_das, sizeof(flecs_c_das));
         compileBuiltinModule("flecs_helpers.das", flecs_helpers_das, sizeof(flecs_helpers_das));
+
+        return true;
     }
 };
 REGISTER_MODULE(Module_flecs);
