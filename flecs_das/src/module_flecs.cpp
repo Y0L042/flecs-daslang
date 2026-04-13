@@ -124,6 +124,7 @@ struct EcsEntitesAnnotation : das::ManagedStructureAnnotation<ecs_entities_t, fa
 
 /// Generated annotations are included verbatim from the binding generator.
 #include "generated/module_flecs_annotations.inc"
+#include "generated/module_flecs_constants.inc"
 
 /// daScript module entry point for the flecs binding package.
 class Module_flecs : public das::Module
