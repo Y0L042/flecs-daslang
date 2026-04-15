@@ -4,7 +4,10 @@
 /// These wrappers smooth over daScript typing and keep common Flecs operations
 /// concise for users of the binding package.
 options gen2
-require flecs
+
+module flecs_boost shared
+
+require flecs_core public
 
 /// Build a query from an array of prepared terms and a cache policy.
 def ecs_query_builder(world : ecs_world_t?, var terms : array<ecs_term_t>, cache_kind : int) : ecs_query_t? {
@@ -40,6 +43,10 @@ def ecs_term(world : ecs_world_t?, cmp : type<auto(T)>, inout : int = EcsInOutDe
 /// Set a value on an entity using the registered component type.
 def ecs_set(world : ecs_world_t?, entity : ecs_entity_t, var value : auto(T)) : void {
     ecs_set(world, entity, ecs_component_register(world, type<T>), value)
+}
+
+def ecs_get_mut(world : ecs_world_t?, entity : ecs_entity_t, t : type<auto(T)>) : T? {
+    unsafe { return reinterpret<T?>(ecs_get_mut_id(world, entity, ecs_component_register(world, type<T>))); }
 }
 
 /// Advance a query iterator and return whether another row is available.

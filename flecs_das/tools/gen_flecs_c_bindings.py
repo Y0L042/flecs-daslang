@@ -365,7 +365,7 @@ def generate(out_path: str) -> None:
         // GENERATED — do not edit manually.
         // Regenerate with: bash manage.sh gen-flecs-c-bind
 
-        require flecs
+        require flecs_core
 
         """)
 

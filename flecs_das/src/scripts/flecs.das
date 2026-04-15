@@ -27,7 +27,7 @@ let EcsInOutDefault : int = 0
 let EcsInOutNone : int = 1
 let EcsInOutFilter : int = 2
 let EcsInOut : int = 3
-let EcsIn : int = 4+
+let EcsIn : int = 4
 let EcsOut : int = 5
 // ecs_oper_kind_t
 let EcsAnd : int = 0
