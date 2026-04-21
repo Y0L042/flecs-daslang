@@ -40,6 +40,14 @@ def ecs_term(world : ecs_world_t?, cmp : type<auto(T)>, inout : int = EcsInOutDe
     return term
 }
 
+def ecs_term(world : ecs_world_t?, cmp : type<auto(T)>, oper : int = EcsAnd, inout : int = EcsInOutDefault) : ecs_term_t {
+    let id : ecs_entity_t = ecs_component_register(world, type<T>)
+    let term : ecs_term_t = ecs_term_t(id=id, inout=int16(inout), oper=int16(oper))
+
+    return term
+}
+
+
 /// Set a value on an entity using the registered component type.
 def ecs_set(world : ecs_world_t?, entity : ecs_entity_t, var value : auto(T)) : void {
     ecs_set(world, entity, ecs_component_register(world, type<T>), value)

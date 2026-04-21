@@ -55,6 +55,15 @@ static void flecs_query_desc_set_term(ecs_query_desc_t &desc, int32_t idx, ecs_i
     desc.terms[idx].inout = (ecs_inout_kind_t)inout;
 }
 
+/// Set a term with all three fields: id, inout, and oper.
+/// Used by query builder methods that need to control the operator (e.g. without() uses EcsNot).
+static void flecs_query_desc_set_term_full(ecs_query_desc_t &desc, int32_t idx, ecs_id_t id, int32_t inout, int32_t oper)
+{
+    desc.terms[idx].id = id;
+    desc.terms[idx].inout = (ecs_inout_kind_t)inout;
+    desc.terms[idx].oper = (ecs_oper_kind_t)oper;
+}
+
 /// Lookup a path using the Flecs path separator while keeping the prefix null.
 static ecs_entity_t flecs_lookup_path(ecs_world_t *world, ecs_entity_t parent, const char *path, bool recursive)
 {
@@ -171,6 +180,8 @@ class Module_flecs : public das::Module
                                                             das::SideEffects::modifyExternal, "flecs_field_at_w_size");
         das::addExtern<DAS_BIND_FUN(flecs_query_desc_set_term)>(
             *this, lib, "flecs_query_desc_set_term", das::SideEffects::modifyArgument, "flecs_query_desc_set_term");
+        das::addExtern<DAS_BIND_FUN(flecs_query_desc_set_term_full)>(
+            *this, lib, "flecs_query_desc_set_term_full", das::SideEffects::modifyArgument, "flecs_query_desc_set_term_full");
         das::addExtern<DAS_BIND_FUN(flecs_query_desc_set_cache_kind)>(*this, lib, "flecs_query_desc_set_cache_kind",
                                                                       das::SideEffects::modifyArgument,
                                                                       "flecs_query_desc_set_cache_kind");

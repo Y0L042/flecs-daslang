@@ -29,6 +29,7 @@ let EcsInOutFilter : int = 2
 let EcsInOut : int = 3
 let EcsIn : int = 4
 let EcsOut : int = 5
+
 // ecs_oper_kind_t
 let EcsAnd : int = 0
 let EcsOr : int = 1
@@ -37,6 +38,7 @@ let EcsOptional : int = 3
 let EcsAndFrom : int = 4
 let EcsOrFrom : int = 5
 let EcsNotFrom : int = 6
+
 // ecs_query_cache_kind_t
 let EcsQueryCacheDefault : int = 0
 let EcsQueryCacheAuto : int = 1
