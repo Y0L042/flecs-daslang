@@ -155,9 +155,9 @@ class Module_flecs : public das::Module
         lib.addBuiltInModule();
 
         // Hand-written registrations
-        addAnnotation(das::make_smart<EcsWorldAnnotation>());
-        addAnnotation(das::make_smart<EcsTypeAnnotation>(lib));
-        addAnnotation(das::make_smart<EcsEntitesAnnotation>(lib));
+        addAnnotation(new EcsWorldAnnotation());
+        addAnnotation(new EcsTypeAnnotation(lib));
+        addAnnotation(new EcsEntitesAnnotation(lib));
 
         das::addExtern<DAS_BIND_FUN(ecs_init)>(*this, lib, "ecs_init", das::SideEffects::modifyExternal, "ecs_init");
         das::addExtern<DAS_BIND_FUN(ecs_fini)>(*this, lib, "ecs_fini", das::SideEffects::modifyExternal, "ecs_fini");

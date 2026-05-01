@@ -3,41 +3,41 @@
 
 // --- Annotation registrations ---
 
-addAnnotation(das::make_smart<EcsStageAnnotation>());
-addAnnotation(das::make_smart<EcsTableAnnotation>());
-addAnnotation(das::make_smart<EcsObservableAnnotation>());
-addAnnotation(das::make_smart<EcsRefAnnotation>());
-addAnnotation(das::make_smart<EcsRecordAnnotation>());
-addAnnotation(das::make_smart<EcsComponentRecordAnnotation>());
-addAnnotation(das::make_smart<EcsMixinsAnnotation>());
-addAnnotation(das::make_smart<EcsTableRecordAnnotation>());
-addAnnotation(das::make_smart<EcsStrbufAnnotation>());
-addAnnotation(das::make_smart<EcsTableRangeAnnotation>());
-addAnnotation(das::make_smart<EcsVarAnnotation>());
-addAnnotation(das::make_smart<EcsHeaderAnnotation>(lib));
-addAnnotation(das::make_smart<EcsTermRefAnnotation>(lib));
-addAnnotation(das::make_smart<EcsTermAnnotation>(lib));
-addAnnotation(das::make_smart<EcsQueryAnnotation>(lib));
-addAnnotation(das::make_smart<EcsObserverAnnotation>(lib));
-addAnnotation(das::make_smart<EcsTypeHooksAnnotation>(lib));
-addAnnotation(das::make_smart<EcsTypeInfoAnnotation>(lib));
-addAnnotation(das::make_smart<EcsValueAnnotation>(lib));
-addAnnotation(das::make_smart<EcsEntityDescAnnotation>(lib));
-addAnnotation(das::make_smart<EcsBulkDescAnnotation>(lib));
-addAnnotation(das::make_smart<EcsComponentDescAnnotation>(lib));
-addAnnotation(das::make_smart<EcsIterAnnotation>(lib));
-addAnnotation(das::make_smart<EcsQueryDescAnnotation>(lib));
-addAnnotation(das::make_smart<EcsObserverDescAnnotation>(lib));
-addAnnotation(das::make_smart<EcsEventDescAnnotation>(lib));
-addAnnotation(das::make_smart<EcsBuildInfoAnnotation>(lib));
-addAnnotation(das::make_smart<EcsWorldInfoAnnotation>(lib));
-addAnnotation(das::make_smart<EcsQueryGroupInfoAnnotation>(lib));
-addAnnotation(das::make_smart<EcsIdentifierAnnotation>(lib));
-addAnnotation(das::make_smart<EcsComponentAnnotation>(lib));
-addAnnotation(das::make_smart<EcsPolyAnnotation>(lib));
-addAnnotation(das::make_smart<EcsDefaultChildComponentAnnotation>(lib));
-addAnnotation(das::make_smart<EcsDeleteEmptyTablesDescAnnotation>(lib));
-addAnnotation(das::make_smart<EcsQueryCountAnnotation>(lib));
+addAnnotation(new EcsStageAnnotation());
+addAnnotation(new EcsTableAnnotation());
+addAnnotation(new EcsObservableAnnotation());
+addAnnotation(new EcsRefAnnotation());
+addAnnotation(new EcsRecordAnnotation());
+addAnnotation(new EcsComponentRecordAnnotation());
+addAnnotation(new EcsMixinsAnnotation());
+addAnnotation(new EcsTableRecordAnnotation());
+addAnnotation(new EcsStrbufAnnotation());
+addAnnotation(new EcsTableRangeAnnotation());
+addAnnotation(new EcsVarAnnotation());
+addAnnotation(new EcsHeaderAnnotation(lib));
+addAnnotation(new EcsTermRefAnnotation(lib));
+addAnnotation(new EcsTermAnnotation(lib));
+addAnnotation(new EcsQueryAnnotation(lib));
+addAnnotation(new EcsObserverAnnotation(lib));
+addAnnotation(new EcsTypeHooksAnnotation(lib));
+addAnnotation(new EcsTypeInfoAnnotation(lib));
+addAnnotation(new EcsValueAnnotation(lib));
+addAnnotation(new EcsEntityDescAnnotation(lib));
+addAnnotation(new EcsBulkDescAnnotation(lib));
+addAnnotation(new EcsComponentDescAnnotation(lib));
+addAnnotation(new EcsIterAnnotation(lib));
+addAnnotation(new EcsQueryDescAnnotation(lib));
+addAnnotation(new EcsObserverDescAnnotation(lib));
+addAnnotation(new EcsEventDescAnnotation(lib));
+addAnnotation(new EcsBuildInfoAnnotation(lib));
+addAnnotation(new EcsWorldInfoAnnotation(lib));
+addAnnotation(new EcsQueryGroupInfoAnnotation(lib));
+addAnnotation(new EcsIdentifierAnnotation(lib));
+addAnnotation(new EcsComponentAnnotation(lib));
+addAnnotation(new EcsPolyAnnotation(lib));
+addAnnotation(new EcsDefaultChildComponentAnnotation(lib));
+addAnnotation(new EcsDeleteEmptyTablesDescAnnotation(lib));
+addAnnotation(new EcsQueryCountAnnotation(lib));
 
 // --- Function registrations ---
 

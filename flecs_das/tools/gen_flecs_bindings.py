@@ -648,13 +648,13 @@ def gen_register(
     lines.append("")
     for name in all_opaque:
         cls = to_annotation_class(name)
-        lines.append(f"addAnnotation(das::make_smart<{cls}>());")
+        lines.append(f"addAnnotation(new {cls}());")
 
     for name, _ in defined_structs:
         if name in skip_structs:
             continue
         cls = to_annotation_class(name)
-        lines.append(f"addAnnotation(das::make_smart<{cls}>(lib));")
+        lines.append(f"addAnnotation(new {cls}(lib));")
 
     lines.append("")
     lines.append("// --- Function registrations ---")
