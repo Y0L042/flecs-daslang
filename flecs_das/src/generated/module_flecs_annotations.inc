@@ -51,6 +51,12 @@ struct EcsTableRecordAnnotation : das::DummyTypeAnnotation {
         : DummyTypeAnnotation("ecs_table_record_t", "ecs_table_record_t", sizeof(void*), alignof(void*)) {}
 };
 
+MAKE_TYPE_FACTORY(ecs_map_t, ecs_map_t);
+struct EcsMapAnnotation : das::DummyTypeAnnotation {
+    EcsMapAnnotation()
+        : DummyTypeAnnotation("ecs_map_t", "ecs_map_t", sizeof(void*), alignof(void*)) {}
+};
+
 MAKE_TYPE_FACTORY(ecs_strbuf_t, ecs_strbuf_t);
 struct EcsStrbufAnnotation : das::DummyTypeAnnotation {
     EcsStrbufAnnotation()
@@ -92,6 +98,9 @@ MAKE_TYPE_FACTORY(ecs_term_t, ecs_term_t);
 struct EcsTermAnnotation : das::ManagedStructureAnnotation<ecs_term_t, false> {
     EcsTermAnnotation(das::ModuleLibrary &ml) : ManagedStructureAnnotation("ecs_term_t", ml) {
         addField<DAS_BIND_MANAGED_FIELD(id)>("id", "id");
+        addField<DAS_BIND_MANAGED_FIELD(src)>("src", "src");
+        addField<DAS_BIND_MANAGED_FIELD(first)>("first", "first");
+        addField<DAS_BIND_MANAGED_FIELD(second)>("second", "second");
         addField<DAS_BIND_MANAGED_FIELD(trav)>("trav", "trav");
         addField<DAS_BIND_MANAGED_FIELD(inout)>("inout", "inout");
         addField<DAS_BIND_MANAGED_FIELD(oper)>("oper", "oper");
@@ -102,6 +111,7 @@ struct EcsTermAnnotation : das::ManagedStructureAnnotation<ecs_term_t, false> {
 MAKE_TYPE_FACTORY(ecs_query_t, ecs_query_t);
 struct EcsQueryAnnotation : das::ManagedStructureAnnotation<ecs_query_t, false> {
     EcsQueryAnnotation(das::ModuleLibrary &ml) : ManagedStructureAnnotation("ecs_query_t", ml) {
+        addField<DAS_BIND_MANAGED_FIELD(hdr)>("hdr", "hdr");
         addField<DAS_BIND_MANAGED_FIELD(terms)>("terms", "terms");
         addField<DAS_BIND_MANAGED_FIELD(sizes)>("sizes", "sizes");
         addField<DAS_BIND_MANAGED_FIELD(ids)>("ids", "ids");
@@ -132,6 +142,7 @@ struct EcsQueryAnnotation : das::ManagedStructureAnnotation<ecs_query_t, false> 
 MAKE_TYPE_FACTORY(ecs_observer_t, ecs_observer_t);
 struct EcsObserverAnnotation : das::ManagedStructureAnnotation<ecs_observer_t, false> {
     EcsObserverAnnotation(das::ModuleLibrary &ml) : ManagedStructureAnnotation("ecs_observer_t", ml) {
+        addField<DAS_BIND_MANAGED_FIELD(hdr)>("hdr", "hdr");
         addField<DAS_BIND_MANAGED_FIELD(query)>("query", "query");
         addField<DAS_BIND_MANAGED_FIELD(events)>("events", "events");
         addField<DAS_BIND_MANAGED_FIELD(event_count)>("event_count", "event_count");
@@ -185,6 +196,7 @@ struct EcsEntityDescAnnotation : das::ManagedStructureAnnotation<ecs_entity_desc
         addField<DAS_BIND_MANAGED_FIELD(symbol)>("symbol", "symbol");
         addField<DAS_BIND_MANAGED_FIELD(use_low_id)>("use_low_id", "use_low_id");
         addField<DAS_BIND_MANAGED_FIELD(add)>("add", "add");
+        addField<DAS_BIND_MANAGED_FIELD(set)>("set", "set");
         addField<DAS_BIND_MANAGED_FIELD(add_expr)>("add_expr", "add_expr");
     }
 };
@@ -220,6 +232,7 @@ struct EcsIterAnnotation : das::ManagedStructureAnnotation<ecs_iter_t, false> {
         addField<DAS_BIND_MANAGED_FIELD(entities)>("entities", "entities");
         addField<DAS_BIND_MANAGED_FIELD(ptrs)>("ptrs", "ptrs");
         addField<DAS_BIND_MANAGED_FIELD(trs)>("trs", "trs");
+        addField<DAS_BIND_MANAGED_FIELD(columns)>("columns", "columns");
         addField<DAS_BIND_MANAGED_FIELD(sizes)>("sizes", "sizes");
         addField<DAS_BIND_MANAGED_FIELD(table)>("table", "table");
         addField<DAS_BIND_MANAGED_FIELD(other_table)>("other_table", "other_table");
@@ -272,8 +285,10 @@ struct EcsObserverDescAnnotation : das::ManagedStructureAnnotation<ecs_observer_
     EcsObserverDescAnnotation(das::ModuleLibrary &ml) : ManagedStructureAnnotation("ecs_observer_desc_t", ml) {
         addField<DAS_BIND_MANAGED_FIELD(_canary)>("_canary", "_canary");
         addField<DAS_BIND_MANAGED_FIELD(entity)>("entity", "entity");
+        addField<DAS_BIND_MANAGED_FIELD(query)>("query", "query");
         addField<DAS_BIND_MANAGED_FIELD(events)>("events", "events");
         addField<DAS_BIND_MANAGED_FIELD(yield_existing)>("yield_existing", "yield_existing");
+        addField<DAS_BIND_MANAGED_FIELD(global_observer)>("global_observer", "global_observer");
         addField<DAS_BIND_MANAGED_FIELD(ctx)>("ctx", "ctx");
         addField<DAS_BIND_MANAGED_FIELD(callback_ctx)>("callback_ctx", "callback_ctx");
         addField<DAS_BIND_MANAGED_FIELD(run_ctx)>("run_ctx", "run_ctx");
@@ -316,8 +331,6 @@ MAKE_TYPE_FACTORY(ecs_world_info_t, ecs_world_info_t);
 struct EcsWorldInfoAnnotation : das::ManagedStructureAnnotation<ecs_world_info_t, false> {
     EcsWorldInfoAnnotation(das::ModuleLibrary &ml) : ManagedStructureAnnotation("ecs_world_info_t", ml) {
         addField<DAS_BIND_MANAGED_FIELD(last_component_id)>("last_component_id", "last_component_id");
-        addField<DAS_BIND_MANAGED_FIELD(min_id)>("min_id", "min_id");
-        addField<DAS_BIND_MANAGED_FIELD(max_id)>("max_id", "max_id");
         addField<DAS_BIND_MANAGED_FIELD(delta_time_raw)>("delta_time_raw", "delta_time_raw");
         addField<DAS_BIND_MANAGED_FIELD(delta_time)>("delta_time", "delta_time");
         addField<DAS_BIND_MANAGED_FIELD(time_scale)>("time_scale", "time_scale");
@@ -360,6 +373,15 @@ struct EcsQueryGroupInfoAnnotation : das::ManagedStructureAnnotation<ecs_query_g
     }
 };
 
+MAKE_TYPE_FACTORY(ecs_entity_range_t, ecs_entity_range_t);
+struct EcsEntityRangeAnnotation : das::ManagedStructureAnnotation<ecs_entity_range_t, false> {
+    EcsEntityRangeAnnotation(das::ModuleLibrary &ml) : ManagedStructureAnnotation("ecs_entity_range_t", ml) {
+        addField<DAS_BIND_MANAGED_FIELD(min)>("min", "min");
+        addField<DAS_BIND_MANAGED_FIELD(max)>("max", "max");
+        addField<DAS_BIND_MANAGED_FIELD(cur)>("cur", "cur");
+    }
+};
+
 MAKE_TYPE_FACTORY(EcsIdentifier, EcsIdentifier);
 struct EcsIdentifierAnnotation : das::ManagedStructureAnnotation<EcsIdentifier, false> {
     EcsIdentifierAnnotation(das::ModuleLibrary &ml) : ManagedStructureAnnotation("EcsIdentifier", ml) {
@@ -391,12 +413,26 @@ struct EcsDefaultChildComponentAnnotation : das::ManagedStructureAnnotation<EcsD
     }
 };
 
+MAKE_TYPE_FACTORY(EcsParent, EcsParent);
+struct EcsParentAnnotation : das::ManagedStructureAnnotation<EcsParent, false> {
+    EcsParentAnnotation(das::ModuleLibrary &ml) : ManagedStructureAnnotation("EcsParent", ml) {
+        addField<DAS_BIND_MANAGED_FIELD(value)>("value", "value");
+    }
+};
+
+MAKE_TYPE_FACTORY(EcsTreeSpawner, EcsTreeSpawner);
+struct EcsTreeSpawnerAnnotation : das::ManagedStructureAnnotation<EcsTreeSpawner, false> {
+    EcsTreeSpawnerAnnotation(das::ModuleLibrary &ml) : ManagedStructureAnnotation("EcsTreeSpawner", ml) {
+    }
+};
+
 MAKE_TYPE_FACTORY(ecs_delete_empty_tables_desc_t, ecs_delete_empty_tables_desc_t);
 struct EcsDeleteEmptyTablesDescAnnotation : das::ManagedStructureAnnotation<ecs_delete_empty_tables_desc_t, false> {
     EcsDeleteEmptyTablesDescAnnotation(das::ModuleLibrary &ml) : ManagedStructureAnnotation("ecs_delete_empty_tables_desc_t", ml) {
         addField<DAS_BIND_MANAGED_FIELD(clear_generation)>("clear_generation", "clear_generation");
         addField<DAS_BIND_MANAGED_FIELD(delete_generation)>("delete_generation", "delete_generation");
         addField<DAS_BIND_MANAGED_FIELD(time_budget_seconds)>("time_budget_seconds", "time_budget_seconds");
+        addField<DAS_BIND_MANAGED_FIELD(offset)>("offset", "offset");
     }
 };
 

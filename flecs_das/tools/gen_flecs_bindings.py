@@ -52,6 +52,20 @@ DAS_RESERVED_FIELD_RENAMES = {
 # exported by every Flecs build configuration that consumers link against.
 # Keep these out of the generated binding surface unless the binding gains a
 # build-config-aware export check.
+#
+# Why these specific symbols: flecs.h declares them unconditionally, but they are
+# only *defined* when their addon is compiled in. Emitting an addConstant() for a
+# symbol whose definition was compiled out is an unresolved-external at link time,
+# not a compile error -- so the failure surfaces late and confusingly.
+#   - EcsTickSource / EcsPipelineQuery / EcsPipeline : gated behind FLECS_PIPELINE
+#   - EcsTimer / EcsRateFilter                       : gated behind FLECS_TIMER
+#   - EcsComponent / EcsIdentifier / EcsPoly / EcsDefaultChildComponent :
+#     core, but historically excluded from the binding surface; left opted out
+#     so this change stays scoped to unblocking Parent hierarchies. Revisit if
+#     a build-config-aware export check is added.
+#
+# Core built-in component ids NOT listed here (e.g. ecs_id(EcsParent),
+# ecs_id(EcsTreeSpawner)) are always defined and are emitted as ecs_id_<Name>.
 SKIP_EXTERN_CONSTS = {
     "ecs_id(EcsComponent)",
     "ecs_id(EcsIdentifier)",
@@ -59,6 +73,7 @@ SKIP_EXTERN_CONSTS = {
     "ecs_id(EcsDefaultChildComponent)",
     "ecs_id(EcsTickSource)",
     "ecs_id(EcsPipelineQuery)",
+    "ecs_id(EcsPipeline)",
     "ecs_id(EcsTimer)",
     "ecs_id(EcsRateFilter)",
 }
@@ -244,8 +259,14 @@ def parse_defined_structs(text: str, fn_ptr_types: set, safe_base_types: set) ->
     """
     Return [(struct_name, [field_names])] for all structs with visible bodies.
     Handles both 'typedef struct X { } X;' and 'struct X { };' patterns.
+
+    Two-pass: first collect all struct names into safe_base_types, then parse
+    fields. This ensures value-type nested struct fields (e.g.
+    ecs_observer_desc_t.query : ecs_query_desc_t) are not silently dropped
+    because their type wasn't yet known when the parent struct was parsed.
     """
-    results = []
+    # Pass 1: collect all struct names and their bodies
+    entries = []
     seen_names = set()
 
     pat = re.compile(r"\b(typedef\s+)?struct\s+(\w+)\s*\{")
@@ -273,7 +294,14 @@ def parse_defined_structs(text: str, fn_ptr_types: set, safe_base_types: set) ->
         if not type_name or type_name in seen_names:
             continue
         seen_names.add(type_name)
+        entries.append((type_name, body))
 
+    # Extend safe_base_types with all collected struct names before parsing fields
+    safe_base_types |= seen_names
+
+    # Pass 2: parse fields now that all struct names are known-safe
+    results = []
+    for type_name, body in entries:
         fields = parse_fields(body, fn_ptr_types, safe_base_types)
         results.append((type_name, fields))
 
@@ -304,6 +332,12 @@ def parse_enums(text: str) -> list:
 
 
 # ─── FLECS_API extern const parsing ──────────────────────────────────────────
+
+# Matches the built-in component id form, e.g. "ecs_id(EcsParent)".
+# sanitize_const_symbol turns these into ecs_id_EcsParent.
+_ECS_ID_CONST_RE = re.compile(r"^ecs_id\s*\(\s*[A-Za-z_]\w*\s*\)$")
+
+
 def parse_extern_consts(text: str) -> list:
     """Return [(c_type, symbol_expr)] for FLECS_API extern const declarations."""
     pat = re.compile(
@@ -340,11 +374,21 @@ def collect_supported_extern_consts(extern_consts: list) -> list:
     """
     Keep externally useful Flecs constants and attach generated getter names.
 
+    Two shapes are kept:
+      - bare tags/traits:      EcsChildOf, EcsPrefab, ECS_PAIR
+      - built-in component ids: ecs_id(EcsParent) -> emitted as ecs_id_EcsParent
+
+    The ecs_id(...) form is what makes built-in components (as opposed to tags)
+    usable from Daslang: setting an EcsParent component requires its component
+    id, and that id is only reachable through ecs_id(EcsParent). Matching it
+    needs an explicit pattern because the expression starts with a lowercase
+    "ecs_id(" rather than the "Ecs"/"ECS_" prefix the bare tags use.
+
     Returns list of dicts:
       {
         'c_type': 'ecs_entity_t'|'ecs_id_t',
-        'expr': 'EcsTarget'|'ecs_id(EcsComponent)'|...,
-        'das_name': 'EcsTarget'
+        'expr': 'EcsTarget'|'ecs_id(EcsParent)'|...,
+        'das_name': 'EcsTarget'|'ecs_id_EcsParent'
       }
     """
     supported_types = {"ecs_entity_t", "ecs_id_t"}
@@ -361,6 +405,7 @@ def collect_supported_extern_consts(extern_consts: list) -> list:
         keep = (
             expr.startswith("Ecs")
             or expr.startswith("ECS_")
+            or _ECS_ID_CONST_RE.match(expr) is not None
         )
         if not keep:
             continue
@@ -414,6 +459,34 @@ def collect_flecs_api_decls(text: str) -> list:
             end += 1
 
     return decls
+
+
+def extract_param_names(params_str: str) -> list:
+    """
+    Extract parameter names from a C parameter list string.
+    Returns a list of name strings (one per param), or [] for void/empty params.
+    Names are the last identifier token in each comma-separated declaration.
+    If a param has no name (only a type, as allowed in C declarations), returns
+    an empty list so the caller can skip emitting ->args().
+    """
+    if not params_str or params_str.strip() in ("void", ""):
+        return []
+    names = []
+    _strip = re.compile(r"[*\s]|const\b|restrict\b")
+    for param in params_str.split(","):
+        param = param.strip()
+        if not param or param == "...":
+            continue
+        no_arr = re.sub(r"\s*\[.*?\]", "", param)
+        tokens = [t for t in _strip.sub(" ", no_arr).split() if t]
+        if len(tokens) < 2:
+            # Only a type token, no name — unnamed parameter
+            return []
+        name = tokens[-1]
+        if not re.match(r"^[A-Za-z_]\w*$", name):
+            return []
+        names.append(name)
+    return names
 
 
 def parse_func_decl(decl: str):
@@ -680,17 +753,26 @@ def gen_register(
             )
             continue
         side_effects = "das::SideEffects::modifyExternal"
+        param_names = extract_param_names(params)
+        args_suffix = ""
+        if param_names:
+            quoted = ", ".join(f'"{n}"' for n in param_names)
+            args_suffix = f"\n    ->args({{{quoted}}});"
         if classification == "copy_or_move":
-            lines.append(
+            line = (
                 f"das::addExtern<DAS_BIND_FUN({func_name}),"
                 f" das::SimNode_ExtFuncCallAndCopyOrMove>"
-                f'(*this, lib, "{func_name}", {side_effects}, "{func_name}");'
+                f'(*this, lib, "{func_name}", {side_effects}, "{func_name}")'
             )
         else:
-            lines.append(
+            line = (
                 f"das::addExtern<DAS_BIND_FUN({func_name})>"
-                f'(*this, lib, "{func_name}", {side_effects}, "{func_name}");'
+                f'(*this, lib, "{func_name}", {side_effects}, "{func_name}")'
             )
+        if args_suffix:
+            lines.append(line + args_suffix)
+        else:
+            lines.append(line + ";")
 
     return "\n".join(lines)
 

@@ -114,19 +114,19 @@ def ecs_get(world: ecs_world_t?; entity: ecs_entity_t; id: ecs_entity_t; _t: typ
 }
 
 def ecs_get_mut(world: ecs_world_t?; entity: ecs_entity_t; id: ecs_entity_t; _t: type<auto(T)>) : T? {
-    unsafe { return reinterpret<T?>(ecs_get_mut_id(world, entity, id)); }
+    unsafe { return reinterpret<T?>(reinterpret<void?>(ecs_get_mut_id(world, entity, id))); }
 }
 
 def ecs_ensure(world: ecs_world_t?; entity: ecs_entity_t; id: ecs_entity_t; _t: type<auto(T)>) : T? {
-    unsafe { return reinterpret<T?>(ecs_ensure_id(world, entity, id, typeinfo sizeof(type<T>))); }
+    unsafe { return reinterpret<T?>(reinterpret<void?>(ecs_ensure_id(world, entity, id, typeinfo sizeof(type<T>)))); }
 }
 
 def ecs_ref_get(world: ecs_world_t?; ref: ecs_ref_t?; id: ecs_entity_t; _t: type<auto(T)>) : T? {
-    unsafe { return reinterpret<T?>(ecs_ref_get_id(world, ref, id)); }
+    unsafe { return reinterpret<T?>(reinterpret<void?>(ecs_ref_get_id(world, ref, id))); }
 }
 
 def ecs_table_get(world: ecs_world_t?; tbl: ecs_table_t?; id: ecs_entity_t; offset: int; _t: type<auto(T)>) : T? {
-    unsafe { return reinterpret<T?>(ecs_table_get_id(world, tbl, id, offset)); }
+    unsafe { return reinterpret<T?>(reinterpret<void?>(ecs_table_get_id(world, tbl, id, offset))); }
 }
 
 def ecs_emplace(world: ecs_world_t?; entity: ecs_entity_t; id: ecs_entity_t; is_new: bool?; _t: type<auto(T)>) : T? {
@@ -191,8 +191,9 @@ def ecs_component_register(world: ecs_world_t?; _t: type<auto(T)>) : ecs_entity_
     let edesc = ecs_entity_desc_t(name=tname, symbol=tname, use_low_id=true)
     var entity: ecs_entity_t
     unsafe { entity = ecs_entity_init(world, addr(edesc)); }
-    var cdesc = ecs_component_desc_t(entity=entity, vtype=ecs_type_info_t(
-        size=typeinfo sizeof(type<T>), alignment=typeinfo alignof(type<T>)))
+    let sz = typeinfo sizeof(type<T>)
+    let al = sz == 0 ? 0 : typeinfo alignof(type<T>)
+    var cdesc = ecs_component_desc_t(entity=entity, vtype=ecs_type_info_t(size=sz, alignment=al))
     var id: ecs_entity_t
     unsafe { id = ecs_component_init(world, addr(cdesc)); }
     return id
@@ -243,4 +244,49 @@ def ecs_add_path(world: ecs_world_t?; entity: ecs_entity_t; parent: ecs_entity_t
 
 def ecs_add_fullpath(world: ecs_world_t?; entity: ecs_entity_t; path: string) : ecs_entity_t {
     return flecs_add_path(world, entity, 0ul, path)
+}
+
+// ==============================================================
+
+// Category I — Parent (non-fragmenting) hierarchy storage
+//
+// Counterpart to the ChildOf pair storage. An entity must use one
+// storage or the other, never both. Note that ecs_get_parent() and
+// ecs_children() read from either storage, so only construction differs.
+
+// Set the Parent component, placing `entity` under `parent`.
+// Prefer this over a (ChildOf, parent) pair for small, deeply nested
+// hierarchies such as prefabs -- it does not fragment the storage.
+def ecs_set_parent(world: ecs_world_t?; entity: ecs_entity_t; parent: ecs_entity_t) {
+    var value = EcsParent(value = parent)
+    unsafe { flecs_set_id(world, entity, ecs_id_EcsParent, typeinfo sizeof(value), addr(value)); }
+}
+
+// Read the Parent component directly. Returns 0 when the entity has no
+// Parent component -- note this is storage-specific and will return 0
+// for a ChildOf child. Use ecs_get_parent() for storage-agnostic lookup.
+def ecs_get_parent_component(world: ecs_world_t?; entity: ecs_entity_t) : ecs_entity_t {
+    unsafe {
+        let p = reinterpret<EcsParent? const>(ecs_get_id(world, entity, ecs_id_EcsParent))
+        return p != null ? p.value : 0ul
+    }
+}
+
+// True if the entity uses the Parent (non-fragmenting) storage.
+def ecs_has_parent_component(world: ecs_world_t?; entity: ecs_entity_t) : bool {
+    return ecs_has_id(world, entity, ecs_id_EcsParent)
+}
+
+// Remove the Parent component, detaching the entity from its parent.
+def ecs_remove_parent(world: ecs_world_t?; entity: ecs_entity_t) {
+    ecs_remove_id(world, entity, ecs_id_EcsParent)
+}
+
+// Create a child of `parent` using Parent storage. `name` may be "".
+def ecs_new_child(world: ecs_world_t?; parent: ecs_entity_t; name: string) : ecs_entity_t {
+    return ecs_new_w_parent(world, parent, name)
+}
+
+def ecs_new_child(world: ecs_world_t?; parent: ecs_entity_t) : ecs_entity_t {
+    return ecs_new_w_parent(world, parent, "")
 }

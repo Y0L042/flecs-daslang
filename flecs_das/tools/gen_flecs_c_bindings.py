@@ -98,6 +98,11 @@ CAT_C_EMPLACE = True
 # Category H — Path shorthands (hardcode "." separator)
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Category I — Parent (non-fragmenting) hierarchy storage, added in flecs 4.1.6
+# ecs_set_parent / ecs_get_parent_component / ecs_new_child, via ecs_id_EcsParent
+# ---------------------------------------------------------------------------
+
 
 # ===========================================================================
 # Helpers
@@ -220,7 +225,8 @@ def gen_cat_c(entries) -> str:
         call = f"{raw}({', '.join(args)})"
         cv_suffix = " const" if cv == "const" else ""
         ret_type = f"T?{cv_suffix}"
-        reint    = f"reinterpret<{ret_type}>({call})"
+        inner    = f"reinterpret<void?>({call})" if cv == "" else call
+        reint    = f"reinterpret<{ret_type}>({inner})"
 
         lines.append(f"def {name}({sig}) : {ret_type} {{")
         lines.append(f"    unsafe {{ return {reint}; }}")
@@ -299,8 +305,9 @@ def gen_cat_f() -> str:
             let edesc = ecs_entity_desc_t(name=tname, symbol=tname, use_low_id=true)
             var entity: ecs_entity_t
             unsafe { entity = ecs_entity_init(world, addr(edesc)); }
-            var cdesc = ecs_component_desc_t(entity=entity, vtype=ecs_type_info_t(
-                size=typeinfo sizeof(type<T>), alignment=typeinfo alignof(type<T>)))
+            let sz = typeinfo sizeof(type<T>)
+            let al = sz == 0 ? 0 : typeinfo alignof(type<T>)
+            var cdesc = ecs_component_desc_t(entity=entity, vtype=ecs_type_info_t(size=sz, alignment=al))
             var id: ecs_entity_t
             unsafe { id = ecs_component_init(world, addr(cdesc)); }
             return id
@@ -359,6 +366,66 @@ def gen_cat_h() -> str:
         """)
 
 
+def gen_cat_i() -> str:
+    """Category I — Parent (non-fragmenting) hierarchy storage.
+
+    Flecs has two hierarchy storages. `ChildOf` is a fragmenting relationship
+    pair, created with ecs_add_pair(world, e, EcsChildOf, parent). `Parent` is
+    the non-fragmenting storage added in 4.1.6: it is a component holding the
+    parent entity, and does not put the parent in the child's type.
+
+    An entity must use one or the other, never both -- setting a Parent on an
+    entity that has a ChildOf pair (or vice versa) is not supported.
+
+    ecs_get_parent / ecs_children work with both storages, so only the
+    constructors need to be storage-specific.
+    """
+    return textwrap.dedent("""\
+        // Category I — Parent (non-fragmenting) hierarchy storage
+        //
+        // Counterpart to the ChildOf pair storage. An entity must use one
+        // storage or the other, never both. Note that ecs_get_parent() and
+        // ecs_children() read from either storage, so only construction differs.
+
+        // Set the Parent component, placing `entity` under `parent`.
+        // Prefer this over a (ChildOf, parent) pair for small, deeply nested
+        // hierarchies such as prefabs -- it does not fragment the storage.
+        def ecs_set_parent(world: ecs_world_t?; entity: ecs_entity_t; parent: ecs_entity_t) {
+            var value = EcsParent(value = parent)
+            unsafe { flecs_set_id(world, entity, ecs_id_EcsParent, typeinfo sizeof(value), addr(value)); }
+        }
+
+        // Read the Parent component directly. Returns 0 when the entity has no
+        // Parent component -- note this is storage-specific and will return 0
+        // for a ChildOf child. Use ecs_get_parent() for storage-agnostic lookup.
+        def ecs_get_parent_component(world: ecs_world_t?; entity: ecs_entity_t) : ecs_entity_t {
+            unsafe {
+                let p = reinterpret<EcsParent? const>(ecs_get_id(world, entity, ecs_id_EcsParent))
+                return p != null ? p.value : 0ul
+            }
+        }
+
+        // True if the entity uses the Parent (non-fragmenting) storage.
+        def ecs_has_parent_component(world: ecs_world_t?; entity: ecs_entity_t) : bool {
+            return ecs_has_id(world, entity, ecs_id_EcsParent)
+        }
+
+        // Remove the Parent component, detaching the entity from its parent.
+        def ecs_remove_parent(world: ecs_world_t?; entity: ecs_entity_t) {
+            ecs_remove_id(world, entity, ecs_id_EcsParent)
+        }
+
+        // Create a child of `parent` using Parent storage. `name` may be "".
+        def ecs_new_child(world: ecs_world_t?; parent: ecs_entity_t; name: string) : ecs_entity_t {
+            return ecs_new_w_parent(world, parent, name)
+        }
+
+        def ecs_new_child(world: ecs_world_t?; parent: ecs_entity_t) : ecs_entity_t {
+            return ecs_new_w_parent(world, parent, "")
+        }
+        """)
+
+
 def generate(out_path: str) -> None:
     header = textwrap.dedent("""\
         options gen2
@@ -396,6 +463,8 @@ def generate(out_path: str) -> None:
         gen_cat_g(),
         sep,
         gen_cat_h(),
+        sep,
+        gen_cat_i(),
     ]
 
     content = "\n".join(sections)

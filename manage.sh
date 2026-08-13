@@ -3,12 +3,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GENERATE_XXD="$SCRIPT_DIR/flecs_das/tools/generate_xxd.py"
-DASLANG="$SCRIPT_DIR/flecs_das/vendor/daslang/build/Debug/daslang.exe"
-GEN_ADAPTER_DAS="$SCRIPT_DIR/flecs_das/src/gen_bind.das"
-GEN_BIND_DAS="$SCRIPT_DIR/flecs_das/src/gen_bind.das"
-SCRIPT_INC="$SCRIPT_DIR/flecs_das/src"
-DAS_FORMATTER="$SCRIPT_DIR/flecs_das/vendor/daslang/utils/dasCodeFormatter/main.das"
-DASROOT="$SCRIPT_DIR/flecs_das/vendor/daslang"
+DASLANG="$SCRIPT_DIR/../daslang/bin/Debug/daslang.exe"
+GEN_ADAPTER_DAS="$SCRIPT_DIR/flecs_das/tools/gen_bind.das"
+GEN_BIND_DAS="$SCRIPT_DIR/flecs_das/tools/gen_bind.das"
+SCRIPT_INC="$SCRIPT_DIR/flecs_das/tools"
+DAS_FORMATTER="$SCRIPT_DIR/../../tools/format_das.das"
+DASROOT="$SCRIPT_DIR/../daslang"
 
 GEN_FLECS_BIND_PY="$SCRIPT_DIR/flecs_das/tools/gen_flecs_bindings.py"
 GENERATED_DIR="$SCRIPT_DIR/flecs_das/src/generated"
@@ -42,7 +42,7 @@ usage() {
     echo ""
     echo "Commands:"
     echo "  gen-inc           Regenerate all .das.inc files from their .das sources"
-    echo "  gen-adapter       Regenerate flecs_das_bind_gen.inc via cpp_bind"
+    echo "  gen-adapter       Regenerate flecs_das_bind_gen.inc via cpp_bind (BROKEN - see manage.sh)"
     echo "  gen-flecs-bind    Parse flecs.h and generate C++ binding fragments + update flecs.das"
     echo "  fmt <file.das>    Format a .das file in-place (backs up, formats, verifies)"
     echo "  fmt-all           Format all .das files under flecs_das/src"
@@ -66,12 +66,19 @@ cmd_gen_inc() {
     echo "Generated $count file(s)."
 }
 
+# NOTE: currently non-functional, and deliberately NOT part of `codegen`.
+# flecs_das/tools/gen_bind.das is a stale copy of Duin's GameObject adapter
+# generator: it `require`s GameObject/dn_gameobject, which does not exist in this
+# repo, and indexes args[8] for its output path. Its output
+# (flecs_das_bind_gen.inc) is referenced by nothing in the build. Left wired up
+# with corrected paths so the command is honest about what it points at; fix or
+# delete gen_bind.das before relying on this target.
 cmd_gen_adapter() {
     local out="$SCRIPT_DIR/flecs_das/src/flecs_das_bind_gen.inc"
-    local dasroot="$SCRIPT_DIR/flecs_das/vendor/daslang"
     local project="$SCRIPT_INC/gen_bind.das_project"
     echo "Running gen_bind.das via daslang..."
-    "$DASLANG" -dasroot "$dasroot" -no-dynamic-modules -project "$project" "$GEN_BIND_DAS" -- "$out"
+    echo "WARNING: gen-adapter is known-broken (see comment in manage.sh)."
+    "$DASLANG" -dasroot "$DASROOT" -no-dynamic-modules -project "$project" "$GEN_BIND_DAS" -- "$out"
 }
 
 cmd_fmt() {
@@ -123,8 +130,6 @@ cmd_codegen() {
     cmd_gen_flecs_c_bind
     echo "==> gen-inc"
     cmd_gen_inc
-    echo "==> gen-adapter"
-    cmd_gen_adapter
 }
 
 cmd_docs() {

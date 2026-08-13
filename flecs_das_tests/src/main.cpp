@@ -4,7 +4,7 @@
 #include <memory>
 
 #include <daScript/daScript.h>
-#include <flecs_das.h>
+#include "../../flecs_das/src/flecs_das.h" //../../flecs_das/flecs_das.h"
 
 std::string GetScriptsDir()
 {
@@ -48,6 +48,7 @@ bool RunDasScript(das::ModuleGroup &libGroup, const std::string &scriptPath, con
     das::TextPrinter tout;
 
     auto fileAccess = das::make_smart<das::FsFileAccess>();
+    fileAccess->introduceNativeModules();
 
     das::CodeOfPolicies policies;
     policies.rtti = true;
@@ -88,9 +89,22 @@ bool RunDasScript(das::ModuleGroup &libGroup, const std::string &scriptPath, con
     return true;
 }
 
+static std::string GetDaslangRoot()
+{
+    std::string file_path(__FILE__);
+    // __FILE__ is something like: .../Duin/vendor/flecs-daslang/flecs_das_tests/src/main.cpp
+    // daslang root sits at:       .../Duin/vendor/daslang
+    size_t pos = file_path.find("vendor");
+    if (pos != std::string::npos)
+        return file_path.substr(0, pos) + "vendor/daslang";
+    return ".";
+}
+
 int main(int argc, char *argv[])
 {
     std::cout << "flecs_das_tests - Testing the flecs daScript module\n\n";
+
+    das::setDasRoot(GetDaslangRoot());
 
     NEED_ALL_DEFAULT_MODULES;
     NEED_MODULE(Module_flecs);
@@ -100,38 +114,24 @@ int main(int argc, char *argv[])
 
     const std::string scriptsDir = GetScriptsDir();
 
-    struct TestCase
+    // test_all.das aggregates every suite (it `require`s each test_*.das and
+    // calls its run_*_tests entry point), so running it covers them all.
+    // It also invokes sandbox() at the end.
+    //
+    // Failures do surface here: end_suite() panics when a suite has any failed
+    // case, and RunDasScript catches that via evalWithCatch and returns false,
+    // so a failing CHECK/REQUIRE yields a non-zero exit code.
+    int failed = 0;
+    std::cout << "[ RUN ] test_all\n";
+    if (RunDasScript(libGroup, scriptsDir + "test_all.das", "main"))
     {
-        std::string file;
-        std::string fn;
-    };
-    TestCase tests[] = {
-        {scriptsDir + "test_world.das", "run_tests"},
-        {scriptsDir + "test_components.das", "run_component_tests"},
-        {scriptsDir + "test_queries.das", "run_query_tests"},
-    };
-
-    int passed = 0, failed = 0;
-    #if 0
-    for (auto &tc : tests)
-    {
-        std::cout << "[ RUN ] " << tc.fn << "\n";
-        if (RunDasScript(libGroup, tc.file, tc.fn))
-        {
-            std::cout << "[ PASS ] " << tc.fn << "\n\n";
-            ++passed;
-        }
-        else
-        {
-            std::cout << "[ FAIL ] " << tc.fn << "\n\n";
-            ++failed;
-        }
+        std::cout << "[ PASS ] test_all\n\n";
     }
-
-    std::cout << "Results: " << passed << " passed, " << failed << " failed.\n";
-    #endif
-
-    RunDasScript(libGroup, scriptsDir + "sandbox.das", "sandbox");
+    else
+    {
+        std::cout << "[ FAIL ] test_all\n\n";
+        ++failed;
+    }
 
     das::Module::Shutdown();
 

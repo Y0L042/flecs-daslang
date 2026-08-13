@@ -5,6 +5,8 @@ project "flecs_das_tests"
     language "C++"
     cppdialect "C++17"
 
+    dependson { "flecs_das" }
+
     local flecsDasRoot = path.join("%{prj.location}", "..", "flecs_das")
 
     targetdir ("%{wks.location}/Duin/vendor/flecs-daslang/flecs_das_tests/bin/" .. outputdir .. "/%{prj.name}")
@@ -26,11 +28,28 @@ project "flecs_das_tests"
     defines {
         "DAS_SMART_PTR_DEBUG=1",
         "DAS_ENABLE_EXCEPTIONS=1",
+        "DAS_ENABLE_DLL=1",
+        "flecs_STATIC",
     }
 
-    libdirs(prependRoot(SolutionRoot, global_libdirs))
+    libdirs {
+        path.join("%{wks.location}", "Duin/vendor/flecs-daslang/flecs_das/bin/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/flecs_das"),
+        path.join("%{wks.location}", "Duin/vendor/daslang/lib/Debug"),
+        path.join("%{wks.location}", "Duin/vendor/flecs/build_vs2026/Debug"),
+    }
 
-    links(global_links)
+    links {
+        "flecs_das.lib",
+        "flecs_static.lib",
+        "libDaScriptDyn.lib",
+        "libDaScriptDyn_runtime.lib",
+    }
+
+    postbuildcommands {
+        '{COPYFILE} "%{wks.location}/Duin/vendor/flecs-daslang/flecs_das/bin/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/flecs_das/flecs_das.dll" "%{cfg.targetdir}/flecs_das.dll"',
+        '{COPYFILE} "%{wks.location}/Duin/vendor/daslang/bin/Debug/libDaScriptDyn.dll" "%{cfg.targetdir}/libDaScriptDyn.dll"',
+        '{COPYFILE} "%{wks.location}/Duin/vendor/daslang/bin/Debug/libDaScriptDyn_runtime.dll" "%{cfg.targetdir}/libDaScriptDyn_runtime.dll"',
+    }
 
     filter "action:vs*"
         buildoptions {
@@ -45,12 +64,12 @@ project "flecs_das_tests"
     filter "configurations:Debug"
         symbols "On"
         optimize "Off"
-        staticruntime "On"
+        staticruntime "Off"
         runtime "Debug"
 
     filter "configurations:Release"
         optimize "Speed"
         symbols "Off"
-        staticruntime "On"
+        staticruntime "Off"
         runtime "Release"
     filter {}
