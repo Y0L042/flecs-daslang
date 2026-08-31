@@ -10,6 +10,37 @@ import sys
 import textwrap
 
 # ---------------------------------------------------------------------------
+# Const-world raw functions
+# ---------------------------------------------------------------------------
+# These flecs C functions take `const ecs_world_t *world`, so daslang binds them
+# with a `ecs_world_t const?` first parameter (typeFactory<const TT*> sets
+# constant=true). Wrappers around them must declare a const world too, otherwise
+# a const world (e.g. read through a const class method's self) cannot be passed
+# without an unsafe reinterpret at every call site.
+#
+# Anything NOT listed here keeps a non-const `ecs_world_t?`. In particular
+# ecs_ensure_id / ecs_emplace_id / ecs_entity_init / ecs_component_init all take
+# a mutable world in the C API.
+CONST_WORLD_RAW = {
+    "ecs_get_id",
+    "ecs_get_mut_id",
+    "ecs_has_id",
+    "ecs_owns_id",
+    "ecs_is_enabled_id",
+    "ecs_count_id",
+    "ecs_get_target_for_id",
+    "ecs_each_id",
+    "ecs_ref_get_id",
+    "ecs_table_get_id",
+}
+
+
+def world_param(raw: str) -> str:
+    """Declared type for the `world` parameter of a wrapper around `raw`."""
+    return "world: ecs_world_t const?" if raw in CONST_WORLD_RAW else "world: ecs_world_t?"
+
+
+# ---------------------------------------------------------------------------
 # Category A — Simple _id wrappers  (no sizeof, no cast)
 # def ecs_foo(world; entity; id) -> raw_fn(world, entity, id)
 # ---------------------------------------------------------------------------
@@ -118,7 +149,7 @@ def ret_stmt(ret_type: str, expr: str) -> str:
 def gen_cat_a(entries) -> str:
     lines = ["// Category A — Simple _id wrappers", ""]
     for (name, raw, extra_params, extra_args, ret) in entries:
-        params = ["world: ecs_world_t?", "entity: ecs_entity_t", "id: ecs_entity_t"] + extra_params
+        params = [world_param(raw), "entity: ecs_entity_t", "id: ecs_entity_t"] + extra_params
         args   = ["world", "entity", "id"] + extra_args
         sig    = "; ".join(params)
         call   = f"{raw}({', '.join(args)})"
@@ -134,7 +165,7 @@ def gen_cat_a(entries) -> str:
 def gen_cat_a_new_w(entries) -> str:
     lines = []
     for (name, raw, ret) in entries:
-        lines.append(f"def {name}(world: ecs_world_t?; id: ecs_entity_t) : {ret} {{")
+        lines.append(f"def {name}({world_param(raw)}; id: ecs_entity_t) : {ret} {{")
         lines.append(f"    return {raw}(world, id)")
         lines.append("}")
         lines.append("")
@@ -151,7 +182,7 @@ def gen_cat_a_bulk() -> str:
 
 def gen_cat_a_each() -> str:
     return textwrap.dedent("""\
-        def ecs_each(world: ecs_world_t?; id: ecs_entity_t) : ecs_iter_t {
+        def ecs_each(world: ecs_world_t const?; id: ecs_entity_t) : ecs_iter_t {
             return ecs_each_id(world, id)
         }
         """)
@@ -159,7 +190,7 @@ def gen_cat_a_each() -> str:
 
 def gen_cat_a_count() -> str:
     return textwrap.dedent("""\
-        def ecs_count(world: ecs_world_t?; id: ecs_entity_t) : int {
+        def ecs_count(world: ecs_world_t const?; id: ecs_entity_t) : int {
             return ecs_count_id(world, id)
         }
         """)
@@ -167,7 +198,7 @@ def gen_cat_a_count() -> str:
 
 def gen_cat_a_target_for() -> str:
     return textwrap.dedent("""\
-        def ecs_get_target_for(world: ecs_world_t?; entity: ecs_entity_t; rel: ecs_entity_t; id: ecs_entity_t) : ecs_entity_t {
+        def ecs_get_target_for(world: ecs_world_t const?; entity: ecs_entity_t; rel: ecs_entity_t; id: ecs_entity_t) : ecs_entity_t {
             return ecs_get_target_for_id(world, entity, rel, id)
         }
         """)
@@ -176,7 +207,7 @@ def gen_cat_a_target_for() -> str:
 def gen_cat_b(entries) -> str:
     lines = ["// Category B — Pair wrappers", ""]
     for (name, raw, extra_params, extra_args, ret) in entries:
-        params = ["world: ecs_world_t?", "entity: ecs_entity_t",
+        params = [world_param(raw), "entity: ecs_entity_t",
                   "first: ecs_entity_t", "second: ecs_entity_t"] + extra_params
         args   = ["world", "entity", "ecs_make_pair(first, second)"] + extra_args
         sig    = "; ".join(params)
@@ -193,7 +224,7 @@ def gen_cat_b(entries) -> str:
 def gen_cat_b_no_entity(entries) -> str:
     lines = []
     for (name, raw, ret) in entries:
-        lines.append(f"def {name}(world: ecs_world_t?; first: ecs_entity_t; second: ecs_entity_t) : {ret} {{")
+        lines.append(f"def {name}({world_param(raw)}; first: ecs_entity_t; second: ecs_entity_t) : {ret} {{")
         lines.append(f"    return {raw}(world, ecs_make_pair(first, second))")
         lines.append("}")
         lines.append("")
@@ -207,19 +238,20 @@ def gen_cat_c(entries) -> str:
         # ecs_ref_get: first world, second ref: ecs_ref_t?, third id, last type<auto(T)>
         # ecs_table_get: first world, second table: ecs_table_t?, third id, extra offset, last type<auto(T)>
         if name == "ecs_ref_get":
-            base_params = ["world: ecs_world_t?", "ref: ecs_ref_t?", "id: ecs_entity_t"]
+            base_params = [world_param(raw), "ref: ecs_ref_t?", "id: ecs_entity_t"]
             base_args   = ["world", "ref", "id"]
         elif name == "ecs_table_get":
-            base_params = ["world: ecs_world_t?", "tbl: ecs_table_t?", "id: ecs_entity_t"]
+            base_params = [world_param(raw), "tbl: ecs_table_t?", "id: ecs_entity_t"]
             base_args   = ["world", "tbl", "id"]
         else:
-            base_params = ["world: ecs_world_t?", "entity: ecs_entity_t", "id: ecs_entity_t"]
+            base_params = [world_param(raw), "entity: ecs_entity_t", "id: ecs_entity_t"]
             base_args   = ["world", "entity", "id"]
 
         params = base_params + extra_params + ["_t: type<auto(T)>"]
         args   = base_args + extra_args
         if needs_sizeof:
-            args.append("typeinfo sizeof(type<T>)")
+            # the raw _id functions take size_t, which binds as uint64
+            args.append("uint64(typeinfo sizeof(type<T>))")
 
         sig  = "; ".join(params)
         call = f"{raw}({', '.join(args)})"
@@ -238,7 +270,7 @@ def gen_cat_c(entries) -> str:
 def gen_cat_c_emplace() -> str:
     return textwrap.dedent("""\
         def ecs_emplace(world: ecs_world_t?; entity: ecs_entity_t; id: ecs_entity_t; is_new: bool?; _t: type<auto(T)>) : T? {
-            unsafe { return reinterpret<T?>(ecs_emplace_id(world, entity, id, typeinfo sizeof(type<T>), is_new)); }
+            unsafe { return reinterpret<T?>(ecs_emplace_id(world, entity, id, uint64(typeinfo sizeof(type<T>)), is_new)); }
         }
         """)
 
@@ -340,15 +372,15 @@ def gen_cat_h() -> str:
     return textwrap.dedent("""\
         // Category H — Path shorthands  (hardcoded "::" separator, NULL prefix via C wrappers)
 
-        def ecs_lookup_from(world: ecs_world_t?; parent: ecs_entity_t; path: string) : ecs_entity_t {
+        def ecs_lookup_from(world: ecs_world_t const?; parent: ecs_entity_t; path: string) : ecs_entity_t {
             return flecs_lookup_path(world, parent, path, true)
         }
 
-        def ecs_get_path_from(world: ecs_world_t?; parent: ecs_entity_t; child: ecs_entity_t) : string const {
+        def ecs_get_path_from(world: ecs_world_t const?; parent: ecs_entity_t; child: ecs_entity_t) : string const {
             return flecs_get_path_from(world, parent, child)
         }
 
-        def ecs_get_path(world: ecs_world_t?; child: ecs_entity_t) : string const {
+        def ecs_get_path(world: ecs_world_t const?; child: ecs_entity_t) : string const {
             return flecs_get_path_from(world, 0ul, child)
         }
 
@@ -398,7 +430,7 @@ def gen_cat_i() -> str:
         // Read the Parent component directly. Returns 0 when the entity has no
         // Parent component -- note this is storage-specific and will return 0
         // for a ChildOf child. Use ecs_get_parent() for storage-agnostic lookup.
-        def ecs_get_parent_component(world: ecs_world_t?; entity: ecs_entity_t) : ecs_entity_t {
+        def ecs_get_parent_component(world: ecs_world_t const?; entity: ecs_entity_t) : ecs_entity_t {
             unsafe {
                 let p = reinterpret<EcsParent? const>(ecs_get_id(world, entity, ecs_id_EcsParent))
                 return p != null ? p.value : 0ul
@@ -406,7 +438,7 @@ def gen_cat_i() -> str:
         }
 
         // True if the entity uses the Parent (non-fragmenting) storage.
-        def ecs_has_parent_component(world: ecs_world_t?; entity: ecs_entity_t) : bool {
+        def ecs_has_parent_component(world: ecs_world_t const?; entity: ecs_entity_t) : bool {
             return ecs_has_id(world, entity, ecs_id_EcsParent)
         }
 

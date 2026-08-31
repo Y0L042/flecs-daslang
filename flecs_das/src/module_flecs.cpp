@@ -79,12 +79,12 @@ static void flecs_query_desc_set_term_src(ecs_query_desc_t &desc, int32_t idx, e
 }
 
 /// Lookup a path using the Flecs path separator while keeping the prefix null.
-static ecs_entity_t flecs_lookup_path(ecs_world_t *world, ecs_entity_t parent, const char *path, bool recursive)
+static ecs_entity_t flecs_lookup_path(const ecs_world_t *world, ecs_entity_t parent, const char *path, bool recursive)
 {
     return ecs_lookup_path_w_sep(world, parent, path, "::", NULL, recursive);
 }
 /// Resolve a path from a parent entity with the Flecs path separator.
-static char *flecs_get_path_from(ecs_world_t *world, ecs_entity_t parent, ecs_entity_t child)
+static char *flecs_get_path_from(const ecs_world_t *world, ecs_entity_t parent, ecs_entity_t child)
 {
     return ecs_get_path_w_sep(world, parent, child, "::", NULL);
 }

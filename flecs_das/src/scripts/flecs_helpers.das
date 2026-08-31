@@ -186,7 +186,7 @@ def ecs_field_iter(var it : ecs_iter_t&, var t : type<auto(T)>, index : int) : i
 }
 
 /// Iterate children of `parent`, invoking `blk` once per child entity.
-def ecs_children_each(world : ecs_world_t?; parent : ecs_entity_t; blk : block<(child : ecs_entity_t)>) : void {
+def ecs_children_each(world : ecs_world_t const?; parent : ecs_entity_t; blk : block<(child : ecs_entity_t)>) : void {
     var it = ecs_children(world, parent)
     unsafe {
         while (ecs_children_next(addr(it))) {
@@ -198,7 +198,7 @@ def ecs_children_each(world : ecs_world_t?; parent : ecs_entity_t; blk : block<(
 }
 
 /// Iterate root-level entities, invoking `blk` once per entity.
-def ecs_children_each(world : ecs_world_t?; blk : block<(child : ecs_entity_t)>) : void {
+def ecs_children_each(world : ecs_world_t const?; blk : block<(child : ecs_entity_t)>) : void {
     ecs_children_each(world, 0ul, blk)
 }
 
@@ -208,7 +208,7 @@ def ecs_children_each(world : ecs_world_t?; blk : block<(child : ecs_entity_t)>)
 ///
 /// The children of a node are collected before recursing, so that the flecs
 /// iterator for a given level is exhausted before a nested iteration begins.
-def ecs_children_each_recursive(world : ecs_world_t?; parent : ecs_entity_t; blk : block<(child : ecs_entity_t)>) : void {
+def ecs_children_each_recursive(world : ecs_world_t const?; parent : ecs_entity_t; blk : block<(child : ecs_entity_t)>) : void {
     var level : array<ecs_entity_t>
     ecs_children_each(world, parent) <| $(child : ecs_entity_t) {
         level |> push(child)
@@ -221,12 +221,12 @@ def ecs_children_each_recursive(world : ecs_world_t?; parent : ecs_entity_t; blk
 }
 
 /// Iterate all entities in the world depth-first, starting from the root.
-def ecs_children_each_recursive(world : ecs_world_t?; blk : block<(child : ecs_entity_t)>) : void {
+def ecs_children_each_recursive(world : ecs_world_t const?; blk : block<(child : ecs_entity_t)>) : void {
     ecs_children_each_recursive(world, 0ul, blk)
 }
 
 /// Collect the children of `parent` into an array (ChildOf or Parent storage).
-def ecs_children_array(world : ecs_world_t?; parent : ecs_entity_t) : array<ecs_entity_t> {
+def ecs_children_array(world : ecs_world_t const?; parent : ecs_entity_t) : array<ecs_entity_t> {
     var result : array<ecs_entity_t>
     ecs_children_each(world, parent) <| $(child : ecs_entity_t) {
         result |> push(child)
@@ -235,7 +235,7 @@ def ecs_children_array(world : ecs_world_t?; parent : ecs_entity_t) : array<ecs_
 }
 
 /// Number of direct children of `parent`.
-def ecs_children_count(world : ecs_world_t?; parent : ecs_entity_t) : int {
+def ecs_children_count(world : ecs_world_t const?; parent : ecs_entity_t) : int {
     var n = 0
     ecs_children_each(world, parent) <| $(child : ecs_entity_t) {
         n++
@@ -252,7 +252,7 @@ def ecs_children_count(world : ecs_world_t?; parent : ecs_entity_t) : int {
 /// the underlying call, so callers should add the trait first.
 /// Parent-storage children are always ordered, as that storage is built on
 /// top of the same ordered-children vector.
-def ecs_ordered_children_array(world : ecs_world_t?; parent : ecs_entity_t) : array<ecs_entity_t> {
+def ecs_ordered_children_array(world : ecs_world_t const?; parent : ecs_entity_t) : array<ecs_entity_t> {
     var result : array<ecs_entity_t>
     let children = ecs_get_ordered_children(world, parent)
     unsafe {
@@ -264,7 +264,7 @@ def ecs_ordered_children_array(world : ecs_world_t?; parent : ecs_entity_t) : ar
 }
 
 /// Iterate children of `parent` in stable order. See ecs_ordered_children_array.
-def ecs_ordered_children_each(world : ecs_world_t?; parent : ecs_entity_t; blk : block<(child : ecs_entity_t)>) : void {
+def ecs_ordered_children_each(world : ecs_world_t const?; parent : ecs_entity_t; blk : block<(child : ecs_entity_t)>) : void {
     let children = ecs_get_ordered_children(world, parent)
     unsafe {
         for (i in range(children.count)) {
@@ -302,12 +302,12 @@ def ecs_set_children_order(world : ecs_world_t?; parent : ecs_entity_t; var chil
 /// Backed by a C++ helper: the depth is the raw low bits of the pair target,
 /// so it cannot be read with ecs_pair_second(), which resolves its target as
 /// an entity id via ecs_get_alive().
-def ecs_get_parent_depth(world : ecs_world_t?; entity : ecs_entity_t) : int {
+def ecs_get_parent_depth(world : ecs_world_t const?; entity : ecs_entity_t) : int {
     return flecs_get_parent_depth(world, entity)
 }
 
 /// Iterate each component/tag id of an entity, invoking blk once per id.
-def ecs_entity_each(world : ecs_world_t?; entity : ecs_entity_t; blk : block<(id : ecs_entity_t)>) : void {
+def ecs_entity_each(world : ecs_world_t const?; entity : ecs_entity_t; blk : block<(id : ecs_entity_t)>) : void {
     let typ = ecs_get_type(world, entity)
     if (typ == null) {
         return

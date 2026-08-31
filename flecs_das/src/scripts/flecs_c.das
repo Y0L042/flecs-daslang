@@ -25,11 +25,11 @@ def ecs_modified(world: ecs_world_t?; entity: ecs_entity_t; id: ecs_entity_t) {
     ecs_modified_id(world, entity, id)
 }
 
-def ecs_has(world: ecs_world_t?; entity: ecs_entity_t; id: ecs_entity_t) : bool {
+def ecs_has(world: ecs_world_t const?; entity: ecs_entity_t; id: ecs_entity_t) : bool {
     return ecs_has_id(world, entity, id)
 }
 
-def ecs_owns(world: ecs_world_t?; entity: ecs_entity_t; id: ecs_entity_t) : bool {
+def ecs_owns(world: ecs_world_t const?; entity: ecs_entity_t; id: ecs_entity_t) : bool {
     return ecs_owns_id(world, entity, id)
 }
 
@@ -37,15 +37,15 @@ def ecs_enable_component(world: ecs_world_t?; entity: ecs_entity_t; id: ecs_enti
     ecs_enable_id(world, entity, id, enable)
 }
 
-def ecs_is_enabled(world: ecs_world_t?; entity: ecs_entity_t; id: ecs_entity_t) : bool {
+def ecs_is_enabled(world: ecs_world_t const?; entity: ecs_entity_t; id: ecs_entity_t) : bool {
     return ecs_is_enabled_id(world, entity, id)
 }
 
-def ecs_count(world: ecs_world_t?; id: ecs_entity_t) : int {
+def ecs_count(world: ecs_world_t const?; id: ecs_entity_t) : int {
     return ecs_count_id(world, id)
 }
 
-def ecs_get_target_for(world: ecs_world_t?; entity: ecs_entity_t; rel: ecs_entity_t; id: ecs_entity_t) : ecs_entity_t {
+def ecs_get_target_for(world: ecs_world_t const?; entity: ecs_entity_t; rel: ecs_entity_t; id: ecs_entity_t) : ecs_entity_t {
     return ecs_get_target_for_id(world, entity, rel, id)
 }
 
@@ -57,7 +57,7 @@ def ecs_bulk_new(world: ecs_world_t?; id: ecs_entity_t; count: int) : ecs_entity
     return ecs_bulk_new_w_id(world, id, count)
 }
 
-def ecs_each(world: ecs_world_t?; id: ecs_entity_t) : ecs_iter_t {
+def ecs_each(world: ecs_world_t const?; id: ecs_entity_t) : ecs_iter_t {
     return ecs_each_id(world, id)
 }
 
@@ -81,11 +81,11 @@ def ecs_modified_pair(world: ecs_world_t?; entity: ecs_entity_t; first: ecs_enti
     ecs_modified_id(world, entity, ecs_make_pair(first, second))
 }
 
-def ecs_has_pair(world: ecs_world_t?; entity: ecs_entity_t; first: ecs_entity_t; second: ecs_entity_t) : bool {
+def ecs_has_pair(world: ecs_world_t const?; entity: ecs_entity_t; first: ecs_entity_t; second: ecs_entity_t) : bool {
     return ecs_has_id(world, entity, ecs_make_pair(first, second))
 }
 
-def ecs_owns_pair(world: ecs_world_t?; entity: ecs_entity_t; first: ecs_entity_t; second: ecs_entity_t) : bool {
+def ecs_owns_pair(world: ecs_world_t const?; entity: ecs_entity_t; first: ecs_entity_t; second: ecs_entity_t) : bool {
     return ecs_owns_id(world, entity, ecs_make_pair(first, second))
 }
 
@@ -93,7 +93,7 @@ def ecs_enable_pair(world: ecs_world_t?; entity: ecs_entity_t; first: ecs_entity
     ecs_enable_id(world, entity, ecs_make_pair(first, second), enable)
 }
 
-def ecs_is_enabled_pair(world: ecs_world_t?; entity: ecs_entity_t; first: ecs_entity_t; second: ecs_entity_t) : bool {
+def ecs_is_enabled_pair(world: ecs_world_t const?; entity: ecs_entity_t; first: ecs_entity_t; second: ecs_entity_t) : bool {
     return ecs_is_enabled_id(world, entity, ecs_make_pair(first, second))
 }
 
@@ -101,7 +101,7 @@ def ecs_new_w_pair(world: ecs_world_t?; first: ecs_entity_t; second: ecs_entity_
     return ecs_new_w_id(world, ecs_make_pair(first, second))
 }
 
-def ecs_each_pair(world: ecs_world_t?; first: ecs_entity_t; second: ecs_entity_t) : ecs_iter_t {
+def ecs_each_pair(world: ecs_world_t const?; first: ecs_entity_t; second: ecs_entity_t) : ecs_iter_t {
     return ecs_each_id(world, ecs_make_pair(first, second))
 }
 
@@ -109,28 +109,28 @@ def ecs_each_pair(world: ecs_world_t?; first: ecs_entity_t; second: ecs_entity_t
 
 // Category C — Pointer-returning generics
 
-def ecs_get(world: ecs_world_t?; entity: ecs_entity_t; id: ecs_entity_t; _t: type<auto(T)>) : T? const {
+def ecs_get(world: ecs_world_t const?; entity: ecs_entity_t; id: ecs_entity_t; _t: type<auto(T)>) : T? const {
     unsafe { return reinterpret<T? const>(ecs_get_id(world, entity, id)); }
 }
 
-def ecs_get_mut(world: ecs_world_t?; entity: ecs_entity_t; id: ecs_entity_t; _t: type<auto(T)>) : T? {
+def ecs_get_mut(world: ecs_world_t const?; entity: ecs_entity_t; id: ecs_entity_t; _t: type<auto(T)>) : T? {
     unsafe { return reinterpret<T?>(reinterpret<void?>(ecs_get_mut_id(world, entity, id))); }
 }
 
 def ecs_ensure(world: ecs_world_t?; entity: ecs_entity_t; id: ecs_entity_t; _t: type<auto(T)>) : T? {
-    unsafe { return reinterpret<T?>(reinterpret<void?>(ecs_ensure_id(world, entity, id, typeinfo sizeof(type<T>)))); }
+    unsafe { return reinterpret<T?>(reinterpret<void?>(ecs_ensure_id(world, entity, id, uint64(typeinfo sizeof(type<T>))))); }
 }
 
-def ecs_ref_get(world: ecs_world_t?; ref: ecs_ref_t?; id: ecs_entity_t; _t: type<auto(T)>) : T? {
+def ecs_ref_get(world: ecs_world_t const?; ref: ecs_ref_t?; id: ecs_entity_t; _t: type<auto(T)>) : T? {
     unsafe { return reinterpret<T?>(reinterpret<void?>(ecs_ref_get_id(world, ref, id))); }
 }
 
-def ecs_table_get(world: ecs_world_t?; tbl: ecs_table_t?; id: ecs_entity_t; offset: int; _t: type<auto(T)>) : T? {
+def ecs_table_get(world: ecs_world_t const?; tbl: ecs_table_t?; id: ecs_entity_t; offset: int; _t: type<auto(T)>) : T? {
     unsafe { return reinterpret<T?>(reinterpret<void?>(ecs_table_get_id(world, tbl, id, offset))); }
 }
 
 def ecs_emplace(world: ecs_world_t?; entity: ecs_entity_t; id: ecs_entity_t; is_new: bool?; _t: type<auto(T)>) : T? {
-    unsafe { return reinterpret<T?>(ecs_emplace_id(world, entity, id, typeinfo sizeof(type<T>), is_new)); }
+    unsafe { return reinterpret<T?>(ecs_emplace_id(world, entity, id, uint64(typeinfo sizeof(type<T>)), is_new)); }
 }
 
 // ==============================================================
@@ -222,15 +222,15 @@ def ecs_query_str(world: ecs_world_t?; expr: string) : ecs_query_t? {
 
 // Category H — Path shorthands  (hardcoded "::" separator, NULL prefix via C wrappers)
 
-def ecs_lookup_from(world: ecs_world_t?; parent: ecs_entity_t; path: string) : ecs_entity_t {
+def ecs_lookup_from(world: ecs_world_t const?; parent: ecs_entity_t; path: string) : ecs_entity_t {
     return flecs_lookup_path(world, parent, path, true)
 }
 
-def ecs_get_path_from(world: ecs_world_t?; parent: ecs_entity_t; child: ecs_entity_t) : string const {
+def ecs_get_path_from(world: ecs_world_t const?; parent: ecs_entity_t; child: ecs_entity_t) : string const {
     return flecs_get_path_from(world, parent, child)
 }
 
-def ecs_get_path(world: ecs_world_t?; child: ecs_entity_t) : string const {
+def ecs_get_path(world: ecs_world_t const?; child: ecs_entity_t) : string const {
     return flecs_get_path_from(world, 0ul, child)
 }
 
@@ -265,7 +265,7 @@ def ecs_set_parent(world: ecs_world_t?; entity: ecs_entity_t; parent: ecs_entity
 // Read the Parent component directly. Returns 0 when the entity has no
 // Parent component -- note this is storage-specific and will return 0
 // for a ChildOf child. Use ecs_get_parent() for storage-agnostic lookup.
-def ecs_get_parent_component(world: ecs_world_t?; entity: ecs_entity_t) : ecs_entity_t {
+def ecs_get_parent_component(world: ecs_world_t const?; entity: ecs_entity_t) : ecs_entity_t {
     unsafe {
         let p = reinterpret<EcsParent? const>(ecs_get_id(world, entity, ecs_id_EcsParent))
         return p != null ? p.value : 0ul
@@ -273,7 +273,7 @@ def ecs_get_parent_component(world: ecs_world_t?; entity: ecs_entity_t) : ecs_en
 }
 
 // True if the entity uses the Parent (non-fragmenting) storage.
-def ecs_has_parent_component(world: ecs_world_t?; entity: ecs_entity_t) : bool {
+def ecs_has_parent_component(world: ecs_world_t const?; entity: ecs_entity_t) : bool {
     return ecs_has_id(world, entity, ecs_id_EcsParent)
 }
 
