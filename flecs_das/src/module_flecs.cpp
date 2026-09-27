@@ -433,9 +433,9 @@ class Module_flecs : public das::Module
             *this, lib, "flecs_get_parent_depth", das::SideEffects::none, "flecs_get_parent_depth")
             ->args({"world", "entity"});
 
-        compileBuiltinModule("flecs.das", flecs_das, sizeof(flecs_das));
-        compileBuiltinModule("flecs_c.das", flecs_c_das, sizeof(flecs_c_das));
-        // compileBuiltinModule("flecs_helpers.das", flecs_helpers_das, sizeof(flecs_helpers_das));
+        das::compileBuiltinModule(this, "flecs.das", flecs_das, sizeof(flecs_das));
+        das::compileBuiltinModule(this, "flecs_c.das", flecs_c_das, sizeof(flecs_c_das));
+        // das::compileBuiltinModule(this, "flecs_helpers.das", flecs_helpers_das, sizeof(flecs_helpers_das));
 
         return true;
     }
